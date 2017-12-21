@@ -5,6 +5,10 @@ VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameFramework", "GameFramework\GameFramework.csproj", "{7E6260A4-9C86-4A4C-B562-B15458683DA2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameFrameworkTests", "GameFrameworkTests\GameFrameworkTests.csproj", "{179E9425-2EDF-43BF-928D-F35CD82D0E29}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestLauncher", "TestLauncher\TestLauncher.csproj", "{F2BE34D6-2E14-4C9F-9152-C3705C7B44AF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{7E6260A4-9C86-4A4C-B562-B15458683DA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E6260A4-9C86-4A4C-B562-B15458683DA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E6260A4-9C86-4A4C-B562-B15458683DA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{179E9425-2EDF-43BF-928D-F35CD82D0E29}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{179E9425-2EDF-43BF-928D-F35CD82D0E29}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{179E9425-2EDF-43BF-928D-F35CD82D0E29}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{179E9425-2EDF-43BF-928D-F35CD82D0E29}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2BE34D6-2E14-4C9F-9152-C3705C7B44AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2BE34D6-2E14-4C9F-9152-C3705C7B44AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2BE34D6-2E14-4C9F-9152-C3705C7B44AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2BE34D6-2E14-4C9F-9152-C3705C7B44AF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
