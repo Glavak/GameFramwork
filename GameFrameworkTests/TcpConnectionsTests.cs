@@ -13,18 +13,34 @@ namespace GameFrameworkTests
     [TestClass]
     public class TcpConnectionsTests
     {
-        TcpNetworkConnectionFactory factoryA = new TcpNetworkConnectionFactory();
-        TcpNetworkConnectionFactory factoryB = new TcpNetworkConnectionFactory();
+        TcpNetworkConnectionFactory factoryA = new TcpNetworkConnectionFactory(4242);
+        TcpNetworkConnectionFactory factoryB = new TcpNetworkConnectionFactory(4243);
 
         [TestMethod]
-        public async Task TestSimpleSendRecieveAsync()
+        public async Task TestConnect()
         {
-            // Connect everything up:
+            // Connect B to A:
             TcpNetworkConnection connectionOnA = null;
-            factoryA.StartListening(4242);
+            factoryA.StartListening();
             factoryA.OnClientConnected += (sender, connectoin) => { connectionOnA = connectoin; };
 
-            TcpNetworkConnection connectionOnB = await factoryB.ConnectToAsync(IPAddress.Loopback, 4242);
+            TcpNetworkConnection connectionOnB = await factoryB.ConnectToAsync(new IPEndPoint(IPAddress.Loopback, 4242));
+
+            await Task.Delay(100);
+
+            Assert.IsNotNull(connectionOnA);
+            Assert.IsTrue(IPAddress.IsLoopback(connectionOnA.Address.Address));
+        }
+
+        [TestMethod]
+        public async Task TestSimpleSendRecieve()
+        {
+            // Connect B to A:
+            TcpNetworkConnection connectionOnA = null;
+            factoryA.StartListening();
+            factoryA.OnClientConnected += (sender, connectoin) => { connectionOnA = connectoin; };
+
+            TcpNetworkConnection connectionOnB = await factoryB.ConnectToAsync(new IPEndPoint(IPAddress.Loopback, 4242));
 
             await Task.Delay(100);
 

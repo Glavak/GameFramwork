@@ -7,32 +7,34 @@ using System.Threading.Tasks;
 
 namespace GameFramework
 {
-    public class NetworkRelay : INetworkRelay
+    public class NetworkRelay<TNetworkConnection, TNetworkAddress> : INetworkRelay
+        where TNetworkConnection : INetworkConnection<TNetworkAddress>
     {
-        public List<Contact>[] KBuckets { get; set; }
-        public List<TcpNetworkConnection> NotHelloedConnections { get; set; }
+        public List<Contact<TNetworkAddress>>[] KBuckets { get; set; }
+        public List<TNetworkConnection> NotHelloedConnections { get; set; }
 
-        private TcpNetworkConnectionFactory connectionFactory;
+        private INetworkConnectionFactory<TNetworkConnection, TNetworkAddress> connectionFactory;
 
         private Guid ownId;
 
-        public NetworkRelay(TcpNetworkConnectionFactory connectionFactory)
+        public NetworkRelay(INetworkConnectionFactory<TNetworkConnection, TNetworkAddress> connectionFactory)
         {
-            KBuckets = new List<Contact>[128];
-            for (int i = 0; i < 128; i++)
+            KBuckets = new List<Contact<TNetworkAddress>>[128];
+            for (int i = 0; i < KBuckets.Length; i++)
             {
-                KBuckets[i] = new List<Contact>();
+                KBuckets[i] = new List<Contact<TNetworkAddress>>();
             }
 
             this.connectionFactory = connectionFactory;
             this.connectionFactory.OnClientConnected += OnClientConnected;
+            this.connectionFactory.StartListening();
 
             ownId = DhtUtils.GeneratePlayerId();
         }
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            this.connectionFactory.StopListening();
         }
 
         public NetworkFile GetFile(Guid fileId)
@@ -42,7 +44,7 @@ namespace GameFramework
 
         public void Start(IEnumerable<IPEndPoint> startupNodes)
         {
-            connectionFactory.StartListening(4242);
+
         }
 
         public void Stop()
@@ -50,7 +52,7 @@ namespace GameFramework
 
         }
 
-        private void OnClientConnected(object sender, TcpNetworkConnection clientConnection)
+        private void OnClientConnected(object sender, TNetworkConnection clientConnection)
         {
             NotHelloedConnections.Add(clientConnection);
             clientConnection.OnRecieve += OnMessageRecieved;
@@ -58,17 +60,17 @@ namespace GameFramework
 
         private void OnMessageRecieved(object sender, INetworkMessage e)
         {
-            TcpNetworkConnection senderConnection = (TcpNetworkConnection)sender;
+            TNetworkConnection senderConnection = (TNetworkConnection)sender;
 
             if (e is HelloNetworkMessage)
             {
                 int bucketIndex = DhtUtils.DistanceExp(ownId, e.From);
-                Contact contact = KBuckets[bucketIndex].FirstOrDefault(c => c.Id == e.From);
+                Contact<TNetworkAddress> contact = KBuckets[bucketIndex].FirstOrDefault(c => c.Id == e.From);
 
                 if (contact == null)
                 {
                     NotHelloedConnections.Remove(senderConnection);
-                    contact = new Contact
+                    contact = new Contact<TNetworkAddress>
                     {
                         Id = e.From,
                         NetworkConnection = senderConnection

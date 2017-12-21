@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 
 namespace GameFramework
 {
-    public interface INetworkConnection : IDisposable
+    public interface INetworkConnection<TAddress> : IDisposable
     {
         void Send(INetworkMessage message);
 
         EventHandler<INetworkMessage> OnRecieve { get; set; }
+
+        TAddress Address { get; }
     }
 }

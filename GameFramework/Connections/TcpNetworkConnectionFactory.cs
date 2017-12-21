@@ -9,21 +9,21 @@ using System.Threading.Tasks;
 
 namespace GameFramework
 {
-    public class TcpNetworkConnectionFactory
+    public class TcpNetworkConnectionFactory : INetworkConnectionFactory<TcpNetworkConnection, IPEndPoint>
     {
         public EventHandler<TcpNetworkConnection> OnClientConnected { get; set; }
 
         private CancellationTokenSource listeningCancellation;
-        private int port;
+        private int listeningPort;
 
-        public TcpNetworkConnectionFactory(int port)
+        public TcpNetworkConnectionFactory(int listeningPort)
         {
-            this.port = port;
+            this.listeningPort = listeningPort;
         }
 
         public void StartListening()
         {
-            var listener = new TcpListener(IPAddress.Any, port);
+            var listener = new TcpListener(IPAddress.Any, listeningPort);
             listener.AllowNatTraversal(true);
             listener.Start();
 
@@ -50,10 +50,10 @@ namespace GameFramework
             }
         }
 
-        public async Task<TcpNetworkConnection> ConnectToAsync(IPAddress address, int port)
+        public async Task<TcpNetworkConnection> ConnectToAsync(IPEndPoint endPoint)
         {
             var client = new TcpClient();
-            await client.ConnectAsync(address, port);
+            await client.ConnectAsync(endPoint.Address, endPoint.Port);
 
             var tcpNetworkConnection = new TcpNetworkConnection(client);
             tcpNetworkConnection.StartRecievingTask();

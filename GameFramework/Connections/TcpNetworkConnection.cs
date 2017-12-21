@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
@@ -8,9 +9,11 @@ using System.Threading.Tasks;
 
 namespace GameFramework
 {
-    public class TcpNetworkConnection : INetworkConnection
+    public class TcpNetworkConnection : INetworkConnection<IPEndPoint>
     {
         public EventHandler<INetworkMessage> OnRecieve { get; set; }
+
+        public IPEndPoint Address => (IPEndPoint)client.Client.RemoteEndPoint;
 
         private TcpClient client;
         private BinaryFormatter formatter;
@@ -19,6 +22,7 @@ namespace GameFramework
         public TcpNetworkConnection(TcpClient client)
         {
             this.client = client;
+            
             formatter = new BinaryFormatter();
         }
 

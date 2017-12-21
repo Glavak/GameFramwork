@@ -40,10 +40,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Connections\INetworkConnectionFactory.cs" />
     <Compile Include="Contact.cs" />
     <Compile Include="DhtUtils.cs" />
     <Compile Include="Messages\DirectNetworkMessage.cs" />
-    <Compile Include="INetworkConnection.cs" />
+    <Compile Include="Connections\INetworkConnection.cs" />
     <Compile Include="Messages\GetFileNetworkMessage.cs" />
     <Compile Include="Messages\HelloNetworkMessage.cs" />
     <Compile Include="Messages\INetworkMessage.cs" />
@@ -52,8 +53,8 @@
     <Compile Include="NetworkPlayer.cs" />
     <Compile Include="NetworkRelay.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TcpNetworkConnection.cs" />
-    <Compile Include="TcpNetworkConnectionFactory.cs" />
+    <Compile Include="Connections\TcpNetworkConnection.cs" />
+    <Compile Include="Connections\TcpNetworkConnectionFactory.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

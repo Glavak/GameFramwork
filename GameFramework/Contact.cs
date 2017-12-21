@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace GameFramework
 {
-    public class Contact
+    public class Contact<TNetworkAdress>
     {
         public Guid Id { get; set; }
 
-        public INetworkConnection NetworkConnection { get; set; }
+        public INetworkConnection<TNetworkAdress> NetworkConnection { get; set; }
     }
 }
