@@ -1,10 +1,6 @@
 ﻿using GameFramework;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace GameFrameworkTests
@@ -13,18 +9,35 @@ namespace GameFrameworkTests
     [TestClass]
     public class NetworkRelayTests
     {
-        INetworkRelay relayA = new NetworkRelay<TcpNetworkConnection, IPEndPoint>(new TcpNetworkConnectionFactory(4242));
-        INetworkRelay relayB = new NetworkRelay<TcpNetworkConnection, IPEndPoint>(new TcpNetworkConnectionFactory(4243));
+        NetworkRelay<TcpNetworkConnection, IPEndPoint> relayA;
+        NetworkRelay<TcpNetworkConnection, IPEndPoint> relayB;
 
         [TestInitialize]
         public void SetUp()
         {
+            relayA = new NetworkRelay<TcpNetworkConnection, IPEndPoint>(new TcpNetworkConnectionFactory(4242));
+            relayB = new NetworkRelay<TcpNetworkConnection, IPEndPoint>(new TcpNetworkConnectionFactory(4243));
+        }
+
+        [TestCleanup]
+        public void Cleanup()
+        {
+            relayA?.Dispose();
+            relayB?.Dispose();
         }
 
         [TestMethod]
-        public void TestHelloPacketConnects()
+        public async Task TestHelloPacketConnects()
         {
-            
+            await relayA.ConnectToNodeAsync(new IPEndPoint(IPAddress.Loopback, 4243));
+
+            await Task.Delay(100);
+
+            Assert.AreEqual(1, relayA.GetConnectedClientsCount());
+            Assert.AreEqual(1, relayB.GetConnectedClientsCount());
+
+            Assert.AreEqual(0, relayA.NotHelloedConnections.Count);
+            Assert.AreEqual(0, relayB.NotHelloedConnections.Count);
         }
     }
 }

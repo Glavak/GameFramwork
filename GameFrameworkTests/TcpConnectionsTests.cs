@@ -1,11 +1,6 @@
 ﻿using GameFramework;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Net.Sockets;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace GameFrameworkTests
@@ -13,21 +8,35 @@ namespace GameFrameworkTests
     [TestClass]
     public class TcpConnectionsTests
     {
-        TcpNetworkConnectionFactory factoryA = new TcpNetworkConnectionFactory(4242);
-        TcpNetworkConnectionFactory factoryB = new TcpNetworkConnectionFactory(4243);
+        TcpNetworkConnectionFactory factoryA;
+        TcpNetworkConnectionFactory factoryB;
 
+        [TestInitialize]
+        public void SetUp()
+        {
+            factoryA = new TcpNetworkConnectionFactory(4242);
+            factoryB = new TcpNetworkConnectionFactory(4243);
+        }
+
+        [TestCleanup]
+        public void Cleanup()
+        {
+            factoryA?.Dispose();
+            factoryB?.Dispose();
+        }
+        
         [TestMethod]
         public async Task TestConnect()
         {
             // Connect B to A:
             TcpNetworkConnection connectionOnA = null;
-            factoryA.StartListening();
             factoryA.OnClientConnected += (sender, connectoin) => { connectionOnA = connectoin; };
 
             TcpNetworkConnection connectionOnB = await factoryB.ConnectToAsync(new IPEndPoint(IPAddress.Loopback, 4242));
 
             await Task.Delay(100);
 
+            // Assert:
             Assert.IsNotNull(connectionOnA);
             Assert.IsTrue(IPAddress.IsLoopback(connectionOnA.Address.Address));
         }
@@ -37,15 +46,13 @@ namespace GameFrameworkTests
         {
             // Connect B to A:
             TcpNetworkConnection connectionOnA = null;
-            factoryA.StartListening();
             factoryA.OnClientConnected += (sender, connectoin) => { connectionOnA = connectoin; };
 
             TcpNetworkConnection connectionOnB = await factoryB.ConnectToAsync(new IPEndPoint(IPAddress.Loopback, 4242));
 
             await Task.Delay(100);
 
-            Assert.IsNotNull(connectionOnA, "OnClientConnected callback haven't called");
-
+            // Send message from B to A:
             INetworkMessage recievedOnA = null;
             connectionOnA.OnRecieve += (sender, message) => { recievedOnA = message; };
 
@@ -54,6 +61,7 @@ namespace GameFrameworkTests
 
             await Task.Delay(100);
 
+            // Assert:
             Assert.IsNotNull(recievedOnA);
             Assert.AreEqual(42, ((DirectNetworkMessage)recievedOnA).Data[0]);
         }

@@ -1,17 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace GameFramework
 {
-    public interface INetworkRelay : IDisposable
+    public interface INetworkRelay<TNetworkConnection, TNetworkAddress> : IDisposable
+        where TNetworkConnection : INetworkConnection<TNetworkAddress>
     {
-        void Start(IEnumerable<IPEndPoint> startupNodes);
-
-        void Stop();
+        Task ConnectToNodeAsync(TNetworkAddress address);
 
         NetworkFile GetFile(Guid fileId);
     }

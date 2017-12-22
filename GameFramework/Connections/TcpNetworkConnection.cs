@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace GameFramework
@@ -15,7 +12,7 @@ namespace GameFramework
 
         public IPEndPoint Address => (IPEndPoint)client.Client.RemoteEndPoint;
 
-        private TcpClient client;
+        private readonly TcpClient client;
         private BinaryFormatter formatter;
         private bool disposed = false;
 
@@ -38,7 +35,7 @@ namespace GameFramework
                 while (!disposed)
                 {
                     INetworkMessage m = (INetworkMessage)formatter.Deserialize(client.GetStream());
-                    OnRecieve.Invoke(this, m);
+                    OnRecieve?.Invoke(this, m);
                 }
             });
         }
@@ -46,7 +43,6 @@ namespace GameFramework
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -56,7 +52,7 @@ namespace GameFramework
 
             if (disposing)
             {
-                client.Dispose();
+                client.Close();
             }
 
             formatter = null;
