@@ -5,16 +5,15 @@ using System.Runtime.Serialization.Formatters.Binary;
 
 namespace TestLauncher
 {
-    class Program
+    internal static class Program
     {
-        static void Main(string[] args)
+        private static void Main()
         {
             DirectNetworkMessage m = new DirectNetworkMessage(DhtUtils.GeneratePlayerId(), DhtUtils.GeneratePlayerId(), new byte[0]);
 
             IFormatter formatter = new BinaryFormatter();
             MemoryStream s = new MemoryStream();
             formatter.Serialize(s, m);
-            
         }
     }
 }

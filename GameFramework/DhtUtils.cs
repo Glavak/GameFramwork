@@ -1,17 +1,18 @@
 ﻿using System;
+using System.Numerics;
 
 namespace GameFramework
 {
     public static class DhtUtils
     {
-        private static Random random = new Random();
+        private static readonly Random random = new Random();
 
         /// <summary>
         /// Useful for finding out which bucket a node belongs to
         /// </summary>
         /// <param name="idA"></param>
         /// <param name="idB"></param>
-        /// <returns>n in: 2^n <= distance(n1, n2) < 2^(n+1), e.g. first bit that differs</returns>
+        /// <returns>n in: 2^n &lt;= distance(n1, n2) &lt; 2^(n+1), e.g. first bit that differs</returns>
         public static int DistanceExp(Guid idA, Guid idB)
         {
             byte[] bytesA = idA.ToByteArray();
@@ -28,10 +29,32 @@ namespace GameFramework
                 {
                     if (xor >= (1 << b)) return bit + (7 - b);
                 }
+
                 return bit;
             }
 
             return 0;
+        }
+
+        /// <summary>
+        /// Calculates XOR-distance to be used in Kademlia network
+        /// </summary>
+        /// <param name="idA"></param>
+        /// <param name="idB"></param>
+        /// <returns></returns>
+        public static BigInteger XorDistance(Guid idA, Guid idB)
+        {
+            byte[] bytesA = idA.ToByteArray();
+            byte[] bytesB = idB.ToByteArray();
+
+            byte[] bytesResult = new byte[bytesA.Length];
+
+            for (int i = 0; i < bytesResult.Length; i++)
+            {
+                bytesResult[bytesResult.Length - 1 - i] = (byte) (bytesA[i] ^ bytesB[i]);
+            }
+
+            return new BigInteger(bytesResult);
         }
 
         public static Guid GeneratePlayerId()

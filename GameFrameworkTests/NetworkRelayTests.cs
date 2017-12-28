@@ -9,8 +9,8 @@ namespace GameFrameworkTests
     [TestClass]
     public class NetworkRelayTests
     {
-        NetworkRelay<TcpNetworkConnection, IPEndPoint> relayA;
-        NetworkRelay<TcpNetworkConnection, IPEndPoint> relayB;
+        private NetworkRelay<TcpNetworkConnection, IPEndPoint> relayA;
+        private NetworkRelay<TcpNetworkConnection, IPEndPoint> relayB;
 
         [TestInitialize]
         public void SetUp()

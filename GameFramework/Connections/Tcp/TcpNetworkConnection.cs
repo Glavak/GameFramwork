@@ -9,6 +9,7 @@ namespace GameFramework
     public class TcpNetworkConnection : INetworkConnection<IPEndPoint>
     {
         public EventHandler<INetworkMessage> OnRecieve { get; set; }
+        public EventHandler OnConnectionDropped { get; set; }
 
         public IPEndPoint Address => (IPEndPoint)client.Client.RemoteEndPoint;
 
@@ -34,8 +35,18 @@ namespace GameFramework
             {
                 while (!disposed)
                 {
-                    INetworkMessage m = (INetworkMessage)formatter.Deserialize(client.GetStream());
-                    OnRecieve?.Invoke(this, m);
+                    try
+                    {
+                        INetworkMessage m = (INetworkMessage) formatter.Deserialize(client.GetStream());
+                        OnRecieve?.Invoke(this, m);
+                    }
+                    catch (Exception)
+                    {
+                        // It means client whether disconnected, or send something unparseable. In both cases, remove it and disconnect
+                        OnConnectionDropped?.Invoke(this, null);
+                        Dispose(true);
+                        return;
+                    }
                 }
             });
         }

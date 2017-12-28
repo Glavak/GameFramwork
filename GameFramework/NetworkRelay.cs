@@ -12,9 +12,9 @@ namespace GameFramework
         public List<Contact<TNetworkAddress>>[] KBuckets { get; set; }
         public List<TNetworkConnection> NotHelloedConnections { get; set; }
 
-        private INetworkConnectionFactory<TNetworkConnection, TNetworkAddress> connectionFactory;
+        private readonly INetworkConnectionFactory<TNetworkConnection, TNetworkAddress> connectionFactory;
 
-        private Guid ownId;
+        private readonly Guid ownId;
         private bool disposed = false;
 
         public NetworkRelay(INetworkConnectionFactory<TNetworkConnection, TNetworkAddress> connectionFactory)
@@ -67,12 +67,7 @@ namespace GameFramework
 
         public int GetConnectedClientsCount()
         {
-            int count = 0;
-            foreach (var kBucket in KBuckets)
-            {
-                count += kBucket.Count;
-            }
-            return count;
+            return KBuckets.Sum(kBucket => kBucket.Count);
         }
 
         private void OnClientConnected(object sender, TNetworkConnection clientConnection)
@@ -86,23 +81,37 @@ namespace GameFramework
 
         private void OnMessageRecieved(object sender, INetworkMessage e)
         {
-            TNetworkConnection senderConnection = (TNetworkConnection)sender;
+            TNetworkConnection senderConnection = (TNetworkConnection) sender;
 
-            if (e is HelloNetworkMessage)
+            // TODO: remake this switch
+            switch (e)
             {
-                int bucketIndex = DhtUtils.DistanceExp(ownId, e.From);
-                Contact<TNetworkAddress> contact = KBuckets[bucketIndex].FirstOrDefault(c => c.Id == e.From);
+                case HelloNetworkMessage message:
+                    int bucketIndex = DhtUtils.DistanceExp(ownId, message.From);
+                    Contact<TNetworkAddress> contact = KBuckets[bucketIndex].FirstOrDefault(c => c.Id == message.From);
 
-                if (contact == null)
-                {
-                    NotHelloedConnections.Remove(senderConnection);
-                    contact = new Contact<TNetworkAddress>
+                    if (contact == null)
                     {
-                        Id = e.From,
-                        NetworkConnection = senderConnection
-                    };
-                    KBuckets[bucketIndex].Add(contact);
-                }
+                        NotHelloedConnections.Remove(senderConnection);
+                        contact = new Contact<TNetworkAddress>
+                        {
+                            Id = message.From,
+                            NetworkConnection = senderConnection
+                        };
+                        KBuckets[bucketIndex].Add(contact);
+                    }
+
+                    break;
+
+                case GetFileNetworkMessage message:
+                    // TODO: if we have required file, give it back
+
+                    var allContacts = KBuckets.SelectMany(b => b);
+                    var closestContacts = allContacts.OrderBy(c => DhtUtils.XorDistance(c.Id, message.FileId));
+
+                    var replyMessage = new NodeListNetworkMessage<TNetworkAddress>(ownId, closestContacts.ToList());
+                    ((TNetworkConnection)sender).Send(replyMessage);
+                    break;
             }
         }
     }

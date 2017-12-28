@@ -6,16 +6,18 @@ using System.Threading.Tasks;
 namespace GameFrameworkTests
 {
     [TestClass]
-    public class TcpConnectionsTests
+    public class LocalConnectionsTests
     {
-        private TcpNetworkConnectionFactory factoryA;
-        private TcpNetworkConnectionFactory factoryB;
+        private LocalNetworkConnectionFactory factoryA;
+        private LocalNetworkConnectionFactory factoryB;
 
         [TestInitialize]
         public void SetUp()
         {
-            factoryA = new TcpNetworkConnectionFactory(4242);
-            factoryB = new TcpNetworkConnectionFactory(4243);
+            LocalNetworkConnectionHub hub = new LocalNetworkConnectionHub();
+
+            factoryA = hub.CreateNodeFactory();
+            factoryB = hub.CreateNodeFactory();
         }
 
         [TestCleanup]
@@ -29,26 +31,26 @@ namespace GameFrameworkTests
         public async Task TestConnect()
         {
             // Connect B to A:
-            TcpNetworkConnection connectionOnA = null;
-            factoryA.OnClientConnected += (sender, connectoin) => { connectionOnA = connectoin; };
+            LocalNetworkConnection connectionOnA = null;
+            factoryA.OnClientConnected += (sender, connection) => { connectionOnA = connection; };
 
-            await factoryB.ConnectToAsync(new IPEndPoint(IPAddress.Loopback, 4242));
+            await factoryB.ConnectToAsync(0);
 
             await Task.Delay(100);
 
             // Assert:
             Assert.IsNotNull(connectionOnA);
-            Assert.IsTrue(IPAddress.IsLoopback(connectionOnA.Address.Address));
+            Assert.AreEqual(1, connectionOnA.Address);
         }
 
         [TestMethod]
         public async Task TestSimpleSendRecieve()
         {
             // Connect B to A:
-            TcpNetworkConnection connectionOnA = null;
+            LocalNetworkConnection connectionOnA = null;
             factoryA.OnClientConnected += (sender, connectoin) => { connectionOnA = connectoin; };
 
-            TcpNetworkConnection connectionOnB = await factoryB.ConnectToAsync(new IPEndPoint(IPAddress.Loopback, 4242));
+            LocalNetworkConnection connectionOnB = await factoryB.ConnectToAsync(0);
 
             await Task.Delay(100);
 
@@ -70,10 +72,10 @@ namespace GameFrameworkTests
         public async Task TestConnectionDropped()
         {
             // Connect B to A:
-            TcpNetworkConnection connectionOnA = null;
+            LocalNetworkConnection connectionOnA = null;
             factoryA.OnClientConnected += (sender, connectoin) => { connectionOnA = connectoin; };
 
-            TcpNetworkConnection connectionOnB = await factoryB.ConnectToAsync(new IPEndPoint(IPAddress.Loopback, 4242));
+            LocalNetworkConnection connectionOnB = await factoryB.ConnectToAsync(0);
 
             await Task.Delay(100);
 

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GameFramework
 {
-    public class TcpNetworkConnectionFactory :
+    public sealed class TcpNetworkConnectionFactory :
         INetworkConnectionFactory<TcpNetworkConnection, IPEndPoint>
     {
         public EventHandler<TcpNetworkConnection> OnClientConnected { get; set; }
@@ -41,10 +41,10 @@ namespace GameFramework
             }, listeningCancellation.Token);
         }
 
-        public async Task<TcpNetworkConnection> ConnectToAsync(IPEndPoint endPoint, EventHandler<INetworkMessage> onMessageRecievedHandler = null)
+        public async Task<TcpNetworkConnection> ConnectToAsync(IPEndPoint connectTo, EventHandler<INetworkMessage> onMessageRecievedHandler = null)
         {
             var client = new TcpClient();
-            await client.ConnectAsync(endPoint.Address, endPoint.Port);
+            await client.ConnectAsync(connectTo.Address, connectTo.Port);
 
             var tcpNetworkConnection = new TcpNetworkConnection(client);
             if (onMessageRecievedHandler != null)
@@ -58,7 +58,7 @@ namespace GameFramework
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (disposed)
                 return;

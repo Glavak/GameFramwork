@@ -32,6 +32,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -41,6 +42,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Connections\INetworkConnectionFactory.cs" />
+    <Compile Include="Connections\Local\LocalNetworkConnection.cs" />
+    <Compile Include="Connections\Local\LocalNetworkConnectionHub.cs" />
+    <Compile Include="Connections\Local\LocalNetworkConnectionFactory.cs" />
     <Compile Include="Contact.cs" />
     <Compile Include="DhtUtils.cs" />
     <Compile Include="Messages\DirectNetworkMessage.cs" />
@@ -49,12 +53,13 @@
     <Compile Include="Messages\HelloNetworkMessage.cs" />
     <Compile Include="Messages\INetworkMessage.cs" />
     <Compile Include="INetworkRelay.cs" />
+    <Compile Include="Messages\NodeListNetworkMessage.cs" />
     <Compile Include="NetworkFile.cs" />
     <Compile Include="NetworkPlayer.cs" />
     <Compile Include="NetworkRelay.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Connections\TcpNetworkConnection.cs" />
-    <Compile Include="Connections\TcpNetworkConnectionFactory.cs" />
+    <Compile Include="Connections\Tcp\TcpNetworkConnection.cs" />
+    <Compile Include="Connections\Tcp\TcpNetworkConnectionFactory.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

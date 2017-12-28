@@ -46,11 +46,13 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DhtUtilsTest.cs" />
     <Compile Include="NetworkRelayTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="LocalConnectionsTests.cs" />
     <Compile Include="TcpConnectionsTests.cs" />
   </ItemGroup>
   <ItemGroup>
