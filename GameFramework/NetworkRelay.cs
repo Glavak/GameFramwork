@@ -84,6 +84,8 @@ namespace GameFramework
             TNetworkConnection senderConnection = (TNetworkConnection) sender;
 
             // TODO: remake this switch
+            INetworkMessage replyMessage;
+
             switch (e)
             {
                 case HelloNetworkMessage message:
@@ -106,13 +108,22 @@ namespace GameFramework
                 case GetFileNetworkMessage message:
                     // TODO: if we have required file, give it back
 
-                    var allContacts = KBuckets.SelectMany(b => b);
-                    var closestContacts = allContacts.OrderBy(c => DhtUtils.XorDistance(c.Id, message.FileId));
+                    replyMessage = new NodeListNetworkMessage<TNetworkAddress>(ownId, GetClosestContacts(message.FileId, 10));
+                    ((TNetworkConnection)sender).Send(replyMessage);
+                    break;
 
-                    var replyMessage = new NodeListNetworkMessage<TNetworkAddress>(ownId, closestContacts.ToList());
+                case GetClosestNodesNetworkMessage message:
+                    replyMessage = new NodeListNetworkMessage<TNetworkAddress>(ownId, GetClosestContacts(message.FileId, 10));
                     ((TNetworkConnection)sender).Send(replyMessage);
                     break;
             }
+        }
+
+        private List<Contact<TNetworkAddress>> GetClosestContacts(Guid nodeId, int maxContacts)
+        {
+            var allContacts = KBuckets.SelectMany(b => b);
+            var closestContacts = allContacts.OrderBy(c => DhtUtils.XorDistance(c.Id, nodeId));
+            return closestContacts.Take(maxContacts).ToList();
         }
     }
 }

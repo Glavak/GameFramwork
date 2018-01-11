@@ -49,6 +49,7 @@
     <Compile Include="DhtUtils.cs" />
     <Compile Include="Messages\DirectNetworkMessage.cs" />
     <Compile Include="Connections\INetworkConnection.cs" />
+    <Compile Include="Messages\GetClosestNodesNetworkMessage.cs" />
     <Compile Include="Messages\GetFileNetworkMessage.cs" />
     <Compile Include="Messages\HelloNetworkMessage.cs" />
     <Compile Include="Messages\INetworkMessage.cs" />
