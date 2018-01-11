@@ -59,6 +59,7 @@ namespace GameFramework
             if (IsAddressAlreadyConnected(address)) return;
 
             TNetworkConnection connection = await connectionFactory.ConnectToAsync(address, OnMessageRecieved);
+            connection.OnConnectionDropped += OnConnectionDropped;
 
             HelloNetworkMessage message = new HelloNetworkMessage(ownId);
             connection.Send(message);
@@ -85,7 +86,7 @@ namespace GameFramework
 
         private void OnConnectionDropped(object sender, EventArgs eventArgs)
         {
-            TNetworkConnection senderConnection = (TNetworkConnection)sender;
+            TNetworkConnection senderConnection = (TNetworkConnection) sender;
 
             foreach (var kBucket in KBuckets)
             {
@@ -98,7 +99,7 @@ namespace GameFramework
 
         private void OnMessageRecieved(object sender, INetworkMessage e)
         {
-            TNetworkConnection senderConnection = (TNetworkConnection)sender;
+            TNetworkConnection senderConnection = (TNetworkConnection) sender;
 
             INetworkMessage replyMessage = null;
             Dictionary<Guid, TNetworkAddress> closestContacts;

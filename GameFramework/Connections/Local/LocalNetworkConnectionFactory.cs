@@ -1,8 +1,6 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace GameFramework
@@ -12,16 +10,38 @@ namespace GameFramework
     {
         public EventHandler<LocalNetworkConnection> OnClientConnected { get; set; }
 
+        private readonly ConcurrentBag<LocalNetworkConnection> pendingConnections = new ConcurrentBag<LocalNetworkConnection>();
+
+        private readonly List<LocalNetworkConnection> ownedConnections = new List<LocalNetworkConnection>();
+
         private readonly int address;
         private readonly LocalNetworkConnectionHub parent;
         private bool disposed = false;
-
-        private List<LocalNetworkConnection> generatedConnections = new List<LocalNetworkConnection>();
 
         public LocalNetworkConnectionFactory(int address, LocalNetworkConnectionHub parent)
         {
             this.address = address;
             this.parent = parent;
+            this.StartAccepting();
+        }
+
+        private void StartAccepting()
+        {
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    if (pendingConnections.TryTake(out LocalNetworkConnection connection))
+                    {
+                        OnClientConnected.Invoke(this, connection);
+                        connection.StartRecievingTask();
+                    }
+                    else
+                    {
+                        await Task.Delay(3); // HACK: but maybe not so bad, it's a lag simulation
+                    }
+                }
+            });
         }
 
         public Task<LocalNetworkConnection> ConnectToAsync(
@@ -37,20 +57,13 @@ namespace GameFramework
             if (onMessageRecievedHandler != null)
                 connectionMeToOther.OnRecieve = onMessageRecievedHandler;
 
-            generatedConnections.Add(connectionMeToOther);
+            parent.NodeFactories[connectTo].pendingConnections.Add(connectionOtherToMe);
 
-            var task = InvokeClientConnectedWithDelayAsync(parent.NodeFactories[connectTo], connectionOtherToMe);
-            LocalNetworkConnectionHub.TasksToWait.Add(task);
+            ownedConnections.Add(connectionMeToOther);
+            parent.NodeFactories[connectTo].ownedConnections.Add(connectionOtherToMe);
 
+            connectionMeToOther.StartRecievingTask();
             return Task.FromResult(connectionMeToOther);
-        }
-
-        private static async Task InvokeClientConnectedWithDelayAsync(
-            LocalNetworkConnectionFactory otherFactory,
-            LocalNetworkConnection connection)
-        {
-            await Task.Delay(5);
-            otherFactory.OnClientConnected.Invoke(otherFactory, connection);
         }
 
         public void Dispose()
@@ -65,20 +78,13 @@ namespace GameFramework
 
             if (disposing)
             {
-                foreach (var generatedConnection in generatedConnections)
+                foreach (var connection in ownedConnections)
                 {
-                    var task = InvokeConnectionDroppedAsync(generatedConnection);
-                    LocalNetworkConnectionHub.TasksToWait.Add(task);
+                    connection.Dispose();
                 }
             }
 
             disposed = true;
-        }
-
-        private static async Task InvokeConnectionDroppedAsync(LocalNetworkConnection connection)
-        {
-            await Task.Delay(10);
-            connection.OtherEnd.OnConnectionDropped?.Invoke(connection.OtherEnd, null);
         }
     }
 }

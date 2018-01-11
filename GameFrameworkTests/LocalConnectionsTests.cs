@@ -1,6 +1,5 @@
 ﻿using GameFramework;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Net;
 using System.Threading.Tasks;
 
 namespace GameFrameworkTests

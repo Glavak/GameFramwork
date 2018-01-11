@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace GameFramework
 {
-    public class TcpNetworkConnection : INetworkConnection<IPAddress>
+    public sealed class TcpNetworkConnection : INetworkConnection<IPAddress>
     {
         public EventHandler<INetworkMessage> OnRecieve { get; set; }
         public EventHandler OnConnectionDropped { get; set; }
@@ -56,7 +56,7 @@ namespace GameFramework
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (disposed)
                 return;

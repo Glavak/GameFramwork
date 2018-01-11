@@ -1,19 +1,18 @@
 ﻿using System;
-using System.Net;
-using System.Net.Sockets;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Threading;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
 namespace GameFramework
 {
-    public class LocalNetworkConnection : INetworkConnection<int>
+    public sealed class LocalNetworkConnection : INetworkConnection<int>
     {
         public EventHandler<INetworkMessage> OnRecieve { get; set; }
         public EventHandler OnConnectionDropped { get; set; }
 
         public int Address { get; set; }
         public LocalNetworkConnection OtherEnd { get; set; }
+
+        private readonly ConcurrentQueue<INetworkMessage> pendingMessages = new ConcurrentQueue<INetworkMessage>();
 
         private bool disposed = false;
 
@@ -22,19 +21,32 @@ namespace GameFramework
             this.Address = addressTo;
         }
 
-        public void Send(INetworkMessage message)
+        public void StartRecievingTask()
         {
-            var task = SendWithDelayAsync(message);
-            LocalNetworkConnectionHub.TasksToWait.Add(task);
-
-            Console.WriteLine($"Send {message} oMR queued");
+            Task.Run(async () =>
+            {
+                while (!disposed)
+                {
+                    if (pendingMessages.TryDequeue(out INetworkMessage message))
+                    {
+                        OnRecieve?.Invoke(this, message);
+                    }
+                    else if (OtherEnd.disposed)
+                    {
+                        OnConnectionDropped?.Invoke(this, null);
+                        Dispose(true);
+                    }
+                    else
+                    {
+                        await Task.Delay(3);
+                    }
+                }
+            });
         }
 
-        private async Task SendWithDelayAsync(INetworkMessage message)
+        public void Send(INetworkMessage message)
         {
-            await Task.Delay(10);
-            OtherEnd.OnRecieve?.Invoke(OtherEnd, message);
-            Console.WriteLine($"Send {message} oMR");
+            OtherEnd.pendingMessages.Enqueue(message);
         }
 
         public void Dispose()
@@ -42,14 +54,14 @@ namespace GameFramework
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (disposed)
                 return;
 
             if (disposing)
             {
-                OtherEnd.OnConnectionDropped.Invoke(OtherEnd, null);
+                // Other end will call OnConnectionDropped when sees our disposed flag rises
             }
 
             disposed = true;
