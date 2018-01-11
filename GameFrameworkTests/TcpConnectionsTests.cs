@@ -32,13 +32,13 @@ namespace GameFrameworkTests
             TcpNetworkConnection connectionOnA = null;
             factoryA.OnClientConnected += (sender, connectoin) => { connectionOnA = connectoin; };
 
-            await factoryB.ConnectToAsync(new IPEndPoint(IPAddress.Loopback, 4242));
+            await factoryB.ConnectToAsync(IPAddress.Loopback);
 
             await Task.Delay(100);
 
             // Assert:
             Assert.IsNotNull(connectionOnA);
-            Assert.IsTrue(IPAddress.IsLoopback(connectionOnA.Address.Address));
+            Assert.IsTrue(IPAddress.IsLoopback(connectionOnA.Address));
         }
 
         [TestMethod]
@@ -48,7 +48,7 @@ namespace GameFrameworkTests
             TcpNetworkConnection connectionOnA = null;
             factoryA.OnClientConnected += (sender, connectoin) => { connectionOnA = connectoin; };
 
-            TcpNetworkConnection connectionOnB = await factoryB.ConnectToAsync(new IPEndPoint(IPAddress.Loopback, 4242));
+            TcpNetworkConnection connectionOnB = await factoryB.ConnectToAsync(IPAddress.Loopback);
 
             await Task.Delay(100);
 
@@ -73,7 +73,7 @@ namespace GameFrameworkTests
             TcpNetworkConnection connectionOnA = null;
             factoryA.OnClientConnected += (sender, connectoin) => { connectionOnA = connectoin; };
 
-            TcpNetworkConnection connectionOnB = await factoryB.ConnectToAsync(new IPEndPoint(IPAddress.Loopback, 4242));
+            TcpNetworkConnection connectionOnB = await factoryB.ConnectToAsync(IPAddress.Loopback);
 
             await Task.Delay(100);
 

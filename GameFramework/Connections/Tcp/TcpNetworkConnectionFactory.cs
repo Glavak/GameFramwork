@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace GameFramework
 {
     public sealed class TcpNetworkConnectionFactory :
-        INetworkConnectionFactory<TcpNetworkConnection, IPEndPoint>
+        INetworkConnectionFactory<TcpNetworkConnection, IPAddress>
     {
         public EventHandler<TcpNetworkConnection> OnClientConnected { get; set; }
 
@@ -41,10 +41,10 @@ namespace GameFramework
             }, listeningCancellation.Token);
         }
 
-        public async Task<TcpNetworkConnection> ConnectToAsync(IPEndPoint connectTo, EventHandler<INetworkMessage> onMessageRecievedHandler = null)
+        public async Task<TcpNetworkConnection> ConnectToAsync(IPAddress connectTo, EventHandler<INetworkMessage> onMessageRecievedHandler = null)
         {
             var client = new TcpClient();
-            await client.ConnectAsync(connectTo.Address, connectTo.Port);
+            await client.ConnectAsync(connectTo, 4242);
 
             var tcpNetworkConnection = new TcpNetworkConnection(client);
             if (onMessageRecievedHandler != null)

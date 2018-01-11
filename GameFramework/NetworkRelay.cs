@@ -16,6 +16,8 @@ namespace GameFramework
         private readonly Guid ownId;
         private bool disposed = false;
 
+        private Dictionary<Guid, NetworkFile> files = new Dictionary<Guid, NetworkFile>();
+
         public NetworkRelay(INetworkConnectionFactory<TNetworkConnection, TNetworkAddress> connectionFactory)
         {
             KBuckets = new List<Contact<TNetworkAddress>>[128];
@@ -28,6 +30,10 @@ namespace GameFramework
             this.connectionFactory.OnClientConnected += OnClientConnected;
 
             ownId = DhtUtils.GeneratePlayerId();
+
+            var ownFile = new NetworkFile(ownId);
+            ownFile.entries.Add("nickname", "client");
+            files.Add(ownId, ownFile);
         }
 
         public void Dispose()
@@ -79,8 +85,9 @@ namespace GameFramework
             TNetworkConnection senderConnection = (TNetworkConnection) sender;
 
             // TODO: remake this switch
-            INetworkMessage replyMessage;
+            INetworkMessage replyMessage = null;
 
+            Dictionary<Guid, TNetworkAddress> closestContacts;
             switch (e)
             {
                 case HelloNetworkMessage message:
@@ -97,27 +104,40 @@ namespace GameFramework
                         KBuckets[bucketIndex].Add(contact);
                     }
 
+                    closestContacts = GetClosestContacts(message.From, 10);
+                    replyMessage = new NodeListNetworkMessage<TNetworkAddress>(ownId, closestContacts);
+
                     break;
 
                 case GetFileNetworkMessage message:
-                    // TODO: if we have required file, give it back
+                    if (files.TryGetValue(message.FileId, out NetworkFile file))
+                    {
+                        replyMessage = new GotFileNetworkMessage(ownId, file);
+                    }
+                    else
+                    {
+                        closestContacts = GetClosestContacts(message.FileId, 10);
+                        replyMessage = new NodeListNetworkMessage<TNetworkAddress>(ownId, closestContacts);
+                    }
 
-                    replyMessage = new NodeListNetworkMessage<TNetworkAddress>(ownId, GetClosestContacts(message.FileId, 10));
-                    ((TNetworkConnection)sender).Send(replyMessage);
                     break;
 
                 case GetClosestNodesNetworkMessage message:
-                    replyMessage = new NodeListNetworkMessage<TNetworkAddress>(ownId, GetClosestContacts(message.FileId, 10));
-                    ((TNetworkConnection)sender).Send(replyMessage);
+                    closestContacts = GetClosestContacts(message.FileId, 10);
+                    replyMessage = new NodeListNetworkMessage<TNetworkAddress>(ownId, closestContacts);
                     break;
             }
+
+            if (replyMessage != null) senderConnection.Send(replyMessage);
         }
 
-        private List<Contact<TNetworkAddress>> GetClosestContacts(Guid nodeId, int maxContacts)
+        private Dictionary<Guid, TNetworkAddress> GetClosestContacts(Guid nodeId, int maxContacts)
         {
             var allContacts = KBuckets.SelectMany(b => b);
             var closestContacts = allContacts.OrderBy(c => DhtUtils.XorDistance(c.Id, nodeId));
-            return closestContacts.Take(maxContacts).ToList();
+            return closestContacts
+                .Take(maxContacts)
+                .ToDictionary(c => c.Id, c => c.NetworkConnection.Address);
         }
     }
 }

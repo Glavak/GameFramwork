@@ -3,17 +3,21 @@ using System.Collections.Generic;
 
 namespace GameFramework
 {
-    public abstract class NetworkFile
+    [Serializable]
+    public class NetworkFile
     {
         public Guid Id { get; }
 
+        /// <summary>
+        /// Last time, at which this version of file was certanly correct and up to date
+        /// </summary>
         public DateTime RecievedFromOrigin { get; }
 
-        private Dictionary<string, string> entries;
+        public Dictionary<string, string> entries = new Dictionary<string, string>();
 
-        public string GetEntry(string key)
+        public NetworkFile(Guid id)
         {
-            return entries[key];
+            Id = id;
         }
     }
 }

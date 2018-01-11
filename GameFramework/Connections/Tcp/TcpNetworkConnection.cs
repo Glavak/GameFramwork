@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace GameFramework
 {
-    public class TcpNetworkConnection : INetworkConnection<IPEndPoint>
+    public class TcpNetworkConnection : INetworkConnection<IPAddress>
     {
         public EventHandler<INetworkMessage> OnRecieve { get; set; }
         public EventHandler OnConnectionDropped { get; set; }
 
-        public IPEndPoint Address => (IPEndPoint)client.Client.RemoteEndPoint;
+        public IPAddress Address => ((IPEndPoint)client.Client.RemoteEndPoint).Address;
 
         private readonly TcpClient client;
         private BinaryFormatter formatter;
