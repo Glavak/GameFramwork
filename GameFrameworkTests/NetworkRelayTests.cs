@@ -9,14 +9,19 @@ namespace GameFrameworkTests
     [TestClass]
     public class NetworkRelayTests
     {
-        private NetworkRelay<TcpNetworkConnection, IPEndPoint> relayA;
-        private NetworkRelay<TcpNetworkConnection, IPEndPoint> relayB;
+        private NetworkRelay<LocalNetworkConnection, int> relayA;
+        private NetworkRelay<LocalNetworkConnection, int> relayB;
 
         [TestInitialize]
         public void SetUp()
         {
-            relayA = new NetworkRelay<TcpNetworkConnection, IPEndPoint>(new TcpNetworkConnectionFactory(4242));
-            relayB = new NetworkRelay<TcpNetworkConnection, IPEndPoint>(new TcpNetworkConnectionFactory(4243));
+            LocalNetworkConnectionHub hub = new LocalNetworkConnectionHub();
+
+            var factoryA = hub.CreateNodeFactory();
+            var factoryB = hub.CreateNodeFactory();
+
+            relayA = new NetworkRelay<LocalNetworkConnection, int>(factoryA);
+            relayB = new NetworkRelay<LocalNetworkConnection, int>(factoryB);
         }
 
         [TestCleanup]
@@ -29,15 +34,12 @@ namespace GameFrameworkTests
         [TestMethod]
         public async Task TestHelloPacketConnects()
         {
-            await relayA.ConnectToNodeAsync(new IPEndPoint(IPAddress.Loopback, 4243));
+            await relayA.ConnectToNodeAsync(1);
 
             await Task.Delay(100);
 
             Assert.AreEqual(1, relayA.GetConnectedClientsCount());
             Assert.AreEqual(1, relayB.GetConnectedClientsCount());
-
-            Assert.AreEqual(0, relayA.NotHelloedConnections.Count);
-            Assert.AreEqual(0, relayB.NotHelloedConnections.Count);
         }
     }
 }

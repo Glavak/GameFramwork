@@ -33,7 +33,7 @@ namespace GameFramework
             if (onMessageRecievedHandler != null)
                 connectionMeToOther.OnRecieve = onMessageRecievedHandler;
 
-            parent.NodeFactories[connectTo].OnClientConnected(parent.NodeFactories[connectTo], connectionOtherToMe);
+            parent.NodeFactories[connectTo].OnClientConnected.Invoke(parent.NodeFactories[connectTo], connectionOtherToMe);
 
             return Task.FromResult(connectionMeToOther);
         }

@@ -10,7 +10,6 @@ namespace GameFramework
         where TNetworkConnection : INetworkConnection<TNetworkAddress>
     {
         public List<Contact<TNetworkAddress>>[] KBuckets { get; set; }
-        public List<TNetworkConnection> NotHelloedConnections { get; set; }
 
         private readonly INetworkConnectionFactory<TNetworkConnection, TNetworkAddress> connectionFactory;
 
@@ -24,8 +23,6 @@ namespace GameFramework
             {
                 KBuckets[i] = new List<Contact<TNetworkAddress>>();
             }
-
-            NotHelloedConnections = new List<TNetworkConnection>();
 
             this.connectionFactory = connectionFactory;
             this.connectionFactory.OnClientConnected += OnClientConnected;
@@ -54,7 +51,6 @@ namespace GameFramework
         public async Task ConnectToNodeAsync(TNetworkAddress address)
         {
             TNetworkConnection connection = await connectionFactory.ConnectToAsync(address, OnMessageRecieved);
-            NotHelloedConnections.Add(connection);
 
             HelloNetworkMessage message = new HelloNetworkMessage(ownId);
             connection.Send(message);
@@ -72,7 +68,6 @@ namespace GameFramework
 
         private void OnClientConnected(object sender, TNetworkConnection clientConnection)
         {
-            NotHelloedConnections.Add(clientConnection);
             clientConnection.OnRecieve += OnMessageRecieved;
 
             HelloNetworkMessage message = new HelloNetworkMessage(ownId);
@@ -94,7 +89,6 @@ namespace GameFramework
 
                     if (contact == null)
                     {
-                        NotHelloedConnections.Remove(senderConnection);
                         contact = new Contact<TNetworkAddress>
                         {
                             Id = message.From,
