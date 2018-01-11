@@ -76,5 +76,20 @@ namespace GameFrameworkTests
             Assert.AreEqual(1, relay0.GetConnectedClientsCount());
             Assert.AreEqual(1, relay2.GetConnectedClientsCount());
         }
+
+        [TestMethod]
+        public async Task TestGetOwnFile()
+        {
+            await relay0.ConnectToNodeAsync(1);
+
+            await Task.Delay(100);
+
+            NetworkFile file = null;
+            relay1.GetFile(relay0.OwnId, (s, f) => file = f);
+
+            await Task.Delay(100);
+
+            Assert.IsNotNull(file);
+        }
     }
 }

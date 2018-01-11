@@ -47,6 +47,7 @@
     <Compile Include="Connections\Local\LocalNetworkConnectionFactory.cs" />
     <Compile Include="Contact.cs" />
     <Compile Include="DhtUtils.cs" />
+    <Compile Include="FileSearchRequest.cs" />
     <Compile Include="Messages\DirectNetworkMessage.cs" />
     <Compile Include="Connections\INetworkConnection.cs" />
     <Compile Include="Messages\GetClosestNodesNetworkMessage.cs" />

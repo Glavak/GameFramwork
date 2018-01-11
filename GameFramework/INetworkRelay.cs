@@ -8,6 +8,6 @@ namespace GameFramework
     {
         Task ConnectToNodeAsync(TNetworkAddress address);
 
-        NetworkFile GetFile(Guid fileId);
+        void GetFile(Guid fileId, EventHandler<NetworkFile> onFileRecieved);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 
 namespace GameFramework
@@ -10,13 +11,16 @@ namespace GameFramework
         where TNetworkConnection : INetworkConnection<TNetworkAddress>
     {
         public List<Contact<TNetworkAddress>>[] KBuckets { get; set; }
+        public Guid OwnId { get; }
 
         private readonly INetworkConnectionFactory<TNetworkConnection, TNetworkAddress> connectionFactory;
 
-        private readonly Guid ownId;
         private bool disposed = false;
 
-        private Dictionary<Guid, NetworkFile> files = new Dictionary<Guid, NetworkFile>();
+        private readonly Dictionary<Guid, NetworkFile> files = new Dictionary<Guid, NetworkFile>();
+
+        private readonly Dictionary<Guid, FileSearchRequest> fileSearchRequests =
+            new Dictionary<Guid, FileSearchRequest>();
 
         public NetworkRelay(INetworkConnectionFactory<TNetworkConnection, TNetworkAddress> connectionFactory)
         {
@@ -29,11 +33,11 @@ namespace GameFramework
             this.connectionFactory = connectionFactory;
             this.connectionFactory.OnClientConnected += OnClientConnected;
 
-            ownId = DhtUtils.GeneratePlayerId();
+            OwnId = DhtUtils.GeneratePlayerId();
 
-            var ownFile = new NetworkFile(ownId);
+            var ownFile = new NetworkFile(OwnId);
             ownFile.entries.Add("nickname", "client");
-            files.Add(ownId, ownFile);
+            files.Add(OwnId, ownFile);
         }
 
         public void Dispose()
@@ -61,13 +65,28 @@ namespace GameFramework
             TNetworkConnection connection = await connectionFactory.ConnectToAsync(address, OnMessageRecieved);
             connection.OnConnectionDropped += OnConnectionDropped;
 
-            HelloNetworkMessage message = new HelloNetworkMessage(ownId);
+            HelloNetworkMessage message = new HelloNetworkMessage(OwnId);
             connection.Send(message);
         }
 
-        public NetworkFile GetFile(Guid fileId)
+        public void GetFile(Guid fileId, EventHandler<NetworkFile> onFileRecieved)
         {
-            throw new NotImplementedException();
+            if (files.TryGetValue(fileId, out NetworkFile file))
+            {
+                onFileRecieved?.Invoke(this, file);
+            }
+            else
+            {
+                var searchRequest = new FileSearchRequest(fileId, onFileRecieved);
+                fileSearchRequests.Add(fileId, searchRequest);
+
+                var contact = GetClosestContactExcept(fileId);
+
+                GetFileNetworkMessage message = new GetFileNetworkMessage(OwnId, fileId);
+                contact.NetworkConnection.Send(message);
+
+                searchRequest.NodesWithoutFile.Add(contact.Id);
+            }
         }
 
         public int GetConnectedClientsCount()
@@ -80,7 +99,7 @@ namespace GameFramework
             clientConnection.OnRecieve += OnMessageRecieved;
             clientConnection.OnConnectionDropped += OnConnectionDropped;
 
-            HelloNetworkMessage message = new HelloNetworkMessage(ownId);
+            HelloNetworkMessage message = new HelloNetworkMessage(OwnId);
             clientConnection.Send(message);
         }
 
@@ -108,7 +127,7 @@ namespace GameFramework
             switch (e)
             {
                 case HelloNetworkMessage message:
-                    int bucketIndex = DhtUtils.DistanceExp(ownId, message.From);
+                    int bucketIndex = DhtUtils.DistanceExp(OwnId, message.From);
 
                     if (contact == null)
                     {
@@ -118,43 +137,69 @@ namespace GameFramework
                             NetworkConnection = senderConnection
                         };
                         KBuckets[bucketIndex].Add(contact);
+                        CheckKBucket(bucketIndex);
                     }
 
                     closestContacts = GetClosestContacts(message.From, 10);
-                    replyMessage = new NodeListNetworkMessage<TNetworkAddress>(ownId, closestContacts);
+                    replyMessage = new NodeListNetworkMessage<TNetworkAddress>(OwnId, closestContacts);
 
                     break;
 
                 case GetFileNetworkMessage message:
                     if (files.TryGetValue(message.FileId, out NetworkFile file))
                     {
-                        replyMessage = new GotFileNetworkMessage(ownId, file);
+                        replyMessage = new GotFileNetworkMessage(OwnId, file);
                     }
                     else
                     {
                         closestContacts = GetClosestContacts(message.FileId, 10);
-                        replyMessage = new NodeListNetworkMessage<TNetworkAddress>(ownId, closestContacts);
+                        replyMessage = new NodeListNetworkMessage<TNetworkAddress>(OwnId, closestContacts);
                     }
 
                     break;
 
                 case GetClosestNodesNetworkMessage message:
                     closestContacts = GetClosestContacts(message.FileId, 10);
-                    replyMessage = new NodeListNetworkMessage<TNetworkAddress>(ownId, closestContacts);
+                    replyMessage = new NodeListNetworkMessage<TNetworkAddress>(OwnId, closestContacts);
                     break;
 
                 case NodeListNetworkMessage<TNetworkAddress> message:
-                    if (contact != null)
-                    {
-                        contact.LastUseful = DateTime.Now;
-                    }
+                    contact.LastUseful = DateTime.Now;
 
                     foreach (var node in message.Nodes)
                     {
-                        if (node.Key != ownId)
+                        if (node.Key != OwnId)
                         {
                             ConnectToNodeAsync(node.Value).Wait();
                         }
+                    }
+
+                    foreach (var searchRequest in fileSearchRequests.Values)
+                    {
+                        var closestContact = GetClosestContactExcept(searchRequest.FileId, searchRequest.NodesWithoutFile);
+
+                        if (closestContact == null)
+                        {
+                            //TODO: no file handling
+                        }
+
+                        GetFileNetworkMessage getFileMessage = new GetFileNetworkMessage(OwnId, searchRequest.FileId);
+                        closestContact.NetworkConnection.Send(getFileMessage);
+                        searchRequest.NodesWithoutFile.Add(closestContact.Id);
+                    }
+
+                    break;
+
+                case GotFileNetworkMessage message:
+                    NetworkFile recievedFile = message.File;
+
+                    if (fileSearchRequests.TryGetValue(recievedFile.Id, out FileSearchRequest request))
+                    {
+                        contact.LastUseful = DateTime.Now;
+
+                        files.Add(recievedFile.Id, recievedFile); // Cache it, in case it's needed later
+                        request.OnFound?.Invoke(this, recievedFile);
+                        fileSearchRequests.Remove(recievedFile.Id);
                     }
 
                     break;
@@ -170,7 +215,7 @@ namespace GameFramework
 
         private Contact<TNetworkAddress> GetContact(Guid id)
         {
-            int bucketIndex = DhtUtils.DistanceExp(ownId, id);
+            int bucketIndex = DhtUtils.DistanceExp(OwnId, id);
 
             return KBuckets[bucketIndex].FirstOrDefault(c => c.Id == id);
         }
@@ -193,6 +238,31 @@ namespace GameFramework
             return closestContacts
                 .Take(maxContacts)
                 .ToDictionary(c => c.Id, c => c.NetworkConnection.Address);
+        }
+
+        private Contact<TNetworkAddress> GetClosestContactExcept(Guid id, ICollection<Guid> excludedIds = null)
+        {
+            var allContacts = KBuckets.SelectMany(b => b);
+            var filteredContacts = allContacts;
+            if (excludedIds != null)
+            {
+                filteredContacts = filteredContacts.Where(c => !excludedIds.Contains(c.Id));
+            }
+
+            Contact<TNetworkAddress> closestContact = null;
+            BigInteger closestDistance = BigInteger.Zero;
+
+            foreach (var contact in filteredContacts)
+            {
+                var distance = DhtUtils.XorDistance(contact.Id, id);
+                if (closestContact == null || distance < closestDistance)
+                {
+                    closestContact = contact;
+                    closestDistance = distance;
+                }
+            }
+
+            return closestContact;
         }
     }
 }
