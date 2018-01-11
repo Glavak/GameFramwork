@@ -11,6 +11,7 @@ namespace GameFrameworkTests
     {
         private NetworkRelay<LocalNetworkConnection, int> relayA;
         private NetworkRelay<LocalNetworkConnection, int> relayB;
+        private NetworkRelay<LocalNetworkConnection, int> relayC;
 
         [TestInitialize]
         public void SetUp()
@@ -19,9 +20,11 @@ namespace GameFrameworkTests
 
             var factoryA = hub.CreateNodeFactory();
             var factoryB = hub.CreateNodeFactory();
+            var factoryC = hub.CreateNodeFactory();
 
             relayA = new NetworkRelay<LocalNetworkConnection, int>(factoryA);
             relayB = new NetworkRelay<LocalNetworkConnection, int>(factoryB);
+            relayC = new NetworkRelay<LocalNetworkConnection, int>(factoryC);
         }
 
         [TestCleanup]
@@ -32,7 +35,7 @@ namespace GameFrameworkTests
         }
 
         [TestMethod]
-        public async Task TestHelloPacketConnects()
+        public async Task TestConnects()
         {
             await relayA.ConnectToNodeAsync(1);
 
@@ -40,6 +43,19 @@ namespace GameFrameworkTests
 
             Assert.AreEqual(1, relayA.GetConnectedClientsCount());
             Assert.AreEqual(1, relayB.GetConnectedClientsCount());
+        }
+
+        [TestMethod]
+        public async Task TestConnectsToNeighbours()
+        {
+            await relayA.ConnectToNodeAsync(1);
+            await relayA.ConnectToNodeAsync(2);
+
+            await Task.Delay(100);
+
+            Assert.AreEqual(2, relayA.GetConnectedClientsCount());
+            Assert.AreEqual(2, relayB.GetConnectedClientsCount());
+            Assert.AreEqual(2, relayC.GetConnectedClientsCount());
         }
     }
 }

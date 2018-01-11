@@ -56,6 +56,8 @@ namespace GameFramework
 
         public async Task ConnectToNodeAsync(TNetworkAddress address)
         {
+            if (IsAddressAlreadyConnected(address)) return;
+
             TNetworkConnection connection = await connectionFactory.ConnectToAsync(address, OnMessageRecieved);
 
             HelloNetworkMessage message = new HelloNetworkMessage(ownId);
@@ -84,10 +86,10 @@ namespace GameFramework
         {
             TNetworkConnection senderConnection = (TNetworkConnection) sender;
 
-            // TODO: remake this switch
             INetworkMessage replyMessage = null;
 
             Dictionary<Guid, TNetworkAddress> closestContacts;
+            // TODO: remake this switch
             switch (e)
             {
                 case HelloNetworkMessage message:
@@ -126,9 +128,25 @@ namespace GameFramework
                     closestContacts = GetClosestContacts(message.FileId, 10);
                     replyMessage = new NodeListNetworkMessage<TNetworkAddress>(ownId, closestContacts);
                     break;
+
+                case NodeListNetworkMessage<TNetworkAddress> message:
+                    foreach (var node in message.Nodes)
+                    {
+                        if (node.Key != ownId)
+                        {
+                            ConnectToNodeAsync(node.Value).Wait();
+                        }
+                    }
+
+                    break;
             }
 
             if (replyMessage != null) senderConnection.Send(replyMessage);
+        }
+
+        private bool IsAddressAlreadyConnected(TNetworkAddress address)
+        {
+            return KBuckets.Any(b => b.Any(c => c.NetworkConnection.Address.Equals(address)));
         }
 
         private Dictionary<Guid, TNetworkAddress> GetClosestContacts(Guid nodeId, int maxContacts)
