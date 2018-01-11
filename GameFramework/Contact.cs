@@ -7,5 +7,7 @@ namespace GameFramework
         public Guid Id { get; set; }
 
         public INetworkConnection<TNetworkAdress> NetworkConnection { get; set; }
+
+        public DateTime LastUseful = DateTime.Now;
     }
 }

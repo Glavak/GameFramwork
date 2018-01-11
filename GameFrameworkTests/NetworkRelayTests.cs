@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 
 namespace GameFrameworkTests
 {
-
     [TestClass]
     public class NetworkRelayTests
     {
@@ -13,14 +12,18 @@ namespace GameFrameworkTests
         private NetworkRelay<LocalNetworkConnection, int> relayB;
         private NetworkRelay<LocalNetworkConnection, int> relayC;
 
+        private LocalNetworkConnectionFactory factoryA;
+        private LocalNetworkConnectionFactory factoryB;
+        private LocalNetworkConnectionFactory factoryC;
+
         [TestInitialize]
         public void SetUp()
         {
             LocalNetworkConnectionHub hub = new LocalNetworkConnectionHub();
 
-            var factoryA = hub.CreateNodeFactory();
-            var factoryB = hub.CreateNodeFactory();
-            var factoryC = hub.CreateNodeFactory();
+            factoryA = hub.CreateNodeFactory();
+            factoryB = hub.CreateNodeFactory();
+            factoryC = hub.CreateNodeFactory();
 
             relayA = new NetworkRelay<LocalNetworkConnection, int>(factoryA);
             relayB = new NetworkRelay<LocalNetworkConnection, int>(factoryB);
@@ -56,6 +59,22 @@ namespace GameFrameworkTests
             Assert.AreEqual(2, relayA.GetConnectedClientsCount());
             Assert.AreEqual(2, relayB.GetConnectedClientsCount());
             Assert.AreEqual(2, relayC.GetConnectedClientsCount());
+        }
+
+        [TestMethod]
+        public async Task TestConnectionDropped()
+        {
+            await relayA.ConnectToNodeAsync(1);
+            await relayA.ConnectToNodeAsync(2);
+
+            await Task.Delay(100);
+
+            factoryB.Dispose();
+
+            await Task.Delay(100);
+
+            Assert.AreEqual(1, relayA.GetConnectedClientsCount());
+            Assert.AreEqual(1, relayC.GetConnectedClientsCount());
         }
     }
 }

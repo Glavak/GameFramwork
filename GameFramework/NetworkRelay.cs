@@ -77,9 +77,23 @@ namespace GameFramework
         private void OnClientConnected(object sender, TNetworkConnection clientConnection)
         {
             clientConnection.OnRecieve += OnMessageRecieved;
+            clientConnection.OnConnectionDropped += OnConnectionDropped;
 
             HelloNetworkMessage message = new HelloNetworkMessage(ownId);
             clientConnection.Send(message);
+        }
+
+        private void OnConnectionDropped(object sender, EventArgs eventArgs)
+        {
+            TNetworkConnection senderConnection = (TNetworkConnection) sender;
+
+            foreach (var kBucket in KBuckets)
+            {
+                if (kBucket.RemoveAll(c => c.NetworkConnection.Address.Equals(senderConnection.Address)) > 0)
+                {
+                    break;
+                }
+            }
         }
 
         private void OnMessageRecieved(object sender, INetworkMessage e)
@@ -87,7 +101,6 @@ namespace GameFramework
             TNetworkConnection senderConnection = (TNetworkConnection) sender;
 
             INetworkMessage replyMessage = null;
-
             Dictionary<Guid, TNetworkAddress> closestContacts;
             // TODO: remake this switch
             switch (e)
@@ -130,6 +143,8 @@ namespace GameFramework
                     break;
 
                 case NodeListNetworkMessage<TNetworkAddress> message:
+                    GetContact(message.From).LastUseful = DateTime.Now;
+
                     foreach (var node in message.Nodes)
                     {
                         if (node.Key != ownId)
@@ -147,6 +162,28 @@ namespace GameFramework
         private bool IsAddressAlreadyConnected(TNetworkAddress address)
         {
             return KBuckets.Any(b => b.Any(c => c.NetworkConnection.Address.Equals(address)));
+        }
+
+        private Contact<TNetworkAddress> GetContact(Guid id)
+        {
+            foreach (var kBucket in KBuckets)
+            {
+                var contact = kBucket.FirstOrDefault(c => c.Id == id);
+                if (contact != null) return contact;
+            }
+
+            return null;
+        }
+
+        private void CheckKBucket(int index)
+        {
+            var kBucket = KBuckets[index];
+
+            if (kBucket.Count > 10)
+            {
+                kBucket.Sort((a, b) => a.LastUseful.CompareTo(b.LastUseful));
+                kBucket.RemoveAt(kBucket.Count - 1);
+            }
         }
 
         private Dictionary<Guid, TNetworkAddress> GetClosestContacts(Guid nodeId, int maxContacts)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -14,6 +15,8 @@ namespace GameFramework
         private readonly int address;
         private readonly LocalNetworkConnectionHub parent;
         private bool disposed = false;
+
+        private List<LocalNetworkConnection> generatedConnections = new List<LocalNetworkConnection>();
 
         public LocalNetworkConnectionFactory(int address, LocalNetworkConnectionHub parent)
         {
@@ -50,6 +53,10 @@ namespace GameFramework
 
             if (disposing)
             {
+                foreach (var generatedConnection in generatedConnections)
+                {
+                    generatedConnection.OtherEnd.OnConnectionDropped.Invoke(generatedConnection.OtherEnd, null);
+                }
             }
 
             disposed = true;
