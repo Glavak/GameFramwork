@@ -85,7 +85,7 @@ namespace GameFramework
 
         private void OnConnectionDropped(object sender, EventArgs eventArgs)
         {
-            TNetworkConnection senderConnection = (TNetworkConnection) sender;
+            TNetworkConnection senderConnection = (TNetworkConnection)sender;
 
             foreach (var kBucket in KBuckets)
             {
@@ -98,16 +98,16 @@ namespace GameFramework
 
         private void OnMessageRecieved(object sender, INetworkMessage e)
         {
-            TNetworkConnection senderConnection = (TNetworkConnection) sender;
+            TNetworkConnection senderConnection = (TNetworkConnection)sender;
 
             INetworkMessage replyMessage = null;
             Dictionary<Guid, TNetworkAddress> closestContacts;
+            Contact<TNetworkAddress> contact = GetContact(e.From);
             // TODO: remake this switch
             switch (e)
             {
                 case HelloNetworkMessage message:
                     int bucketIndex = DhtUtils.DistanceExp(ownId, message.From);
-                    Contact<TNetworkAddress> contact = KBuckets[bucketIndex].FirstOrDefault(c => c.Id == message.From);
 
                     if (contact == null)
                     {
@@ -143,7 +143,10 @@ namespace GameFramework
                     break;
 
                 case NodeListNetworkMessage<TNetworkAddress> message:
-                    GetContact(message.From).LastUseful = DateTime.Now;
+                    if (contact != null)
+                    {
+                        contact.LastUseful = DateTime.Now;
+                    }
 
                     foreach (var node in message.Nodes)
                     {
@@ -166,13 +169,9 @@ namespace GameFramework
 
         private Contact<TNetworkAddress> GetContact(Guid id)
         {
-            foreach (var kBucket in KBuckets)
-            {
-                var contact = kBucket.FirstOrDefault(c => c.Id == id);
-                if (contact != null) return contact;
-            }
+            int bucketIndex = DhtUtils.DistanceExp(ownId, id);
 
-            return null;
+            return KBuckets[bucketIndex].FirstOrDefault(c => c.Id == id);
         }
 
         private void CheckKBucket(int index)

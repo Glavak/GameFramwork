@@ -24,7 +24,8 @@ namespace GameFramework
             this.parent = parent;
         }
 
-        public Task<LocalNetworkConnection> ConnectToAsync(int connectTo,
+        public Task<LocalNetworkConnection> ConnectToAsync(
+            int connectTo,
             EventHandler<INetworkMessage> onMessageRecievedHandler = null)
         {
             var connectionMeToOther = new LocalNetworkConnection(connectTo);
@@ -36,9 +37,20 @@ namespace GameFramework
             if (onMessageRecievedHandler != null)
                 connectionMeToOther.OnRecieve = onMessageRecievedHandler;
 
-            parent.NodeFactories[connectTo].OnClientConnected.Invoke(parent.NodeFactories[connectTo], connectionOtherToMe);
+            generatedConnections.Add(connectionMeToOther);
+
+            var task = InvokeClientConnectedWithDelayAsync(parent.NodeFactories[connectTo], connectionOtherToMe);
+            LocalNetworkConnectionHub.TasksToWait.Add(task);
 
             return Task.FromResult(connectionMeToOther);
+        }
+
+        private static async Task InvokeClientConnectedWithDelayAsync(
+            LocalNetworkConnectionFactory otherFactory,
+            LocalNetworkConnection connection)
+        {
+            await Task.Delay(5);
+            otherFactory.OnClientConnected.Invoke(otherFactory, connection);
         }
 
         public void Dispose()
@@ -55,11 +67,18 @@ namespace GameFramework
             {
                 foreach (var generatedConnection in generatedConnections)
                 {
-                    generatedConnection.OtherEnd.OnConnectionDropped.Invoke(generatedConnection.OtherEnd, null);
+                    var task = InvokeConnectionDroppedAsync(generatedConnection);
+                    LocalNetworkConnectionHub.TasksToWait.Add(task);
                 }
             }
 
             disposed = true;
+        }
+
+        private static async Task InvokeConnectionDroppedAsync(LocalNetworkConnection connection)
+        {
+            await Task.Delay(10);
+            connection.OtherEnd.OnConnectionDropped?.Invoke(connection.OtherEnd, null);
         }
     }
 }

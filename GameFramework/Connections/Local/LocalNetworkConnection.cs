@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace GameFramework
@@ -23,9 +24,19 @@ namespace GameFramework
 
         public void Send(INetworkMessage message)
         {
-            OtherEnd.OnRecieve.Invoke(OtherEnd, message);
+            var task = SendWithDelayAsync(message);
+            LocalNetworkConnectionHub.TasksToWait.Add(task);
+
+            Console.WriteLine($"Send {message} oMR queued");
         }
-        
+
+        private async Task SendWithDelayAsync(INetworkMessage message)
+        {
+            await Task.Delay(10);
+            OtherEnd.OnRecieve?.Invoke(OtherEnd, message);
+            Console.WriteLine($"Send {message} oMR");
+        }
+
         public void Dispose()
         {
             Dispose(true);

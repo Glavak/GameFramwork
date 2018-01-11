@@ -1,6 +1,7 @@
 ﻿using GameFramework;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace GameFrameworkTests
@@ -35,6 +36,7 @@ namespace GameFrameworkTests
         {
             relayA?.Dispose();
             relayB?.Dispose();
+            relayC?.Dispose();
         }
 
         [TestMethod]
@@ -42,7 +44,7 @@ namespace GameFrameworkTests
         {
             await relayA.ConnectToNodeAsync(1);
 
-            await Task.Delay(100);
+            LocalNetworkConnectionHub.WaitForSettle();
 
             Assert.AreEqual(1, relayA.GetConnectedClientsCount());
             Assert.AreEqual(1, relayB.GetConnectedClientsCount());
