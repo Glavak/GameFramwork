@@ -10,6 +10,8 @@ namespace GameFramework
         INetworkRelay<TNetworkConnection, TNetworkAddress>
         where TNetworkConnection : INetworkConnection<TNetworkAddress>
     {
+        public EventHandler<byte[]> OnDirectMessage;
+
         public List<Contact<TNetworkAddress>>[] KBuckets { get; set; }
         public Guid OwnId { get; }
 
@@ -87,6 +89,13 @@ namespace GameFramework
 
                 searchRequest.NodesWithoutFile.Add(contact.Id);
             }
+        }
+
+        public void SendDirectMessage(Guid target, byte[] data)
+        {
+            var closestNode = GetClosestContactExcept(target);
+            var message = new DirectNetworkMessage(OwnId, target, data);
+            closestNode.NetworkConnection.Send(message);
         }
 
         public int GetConnectedClientsCount()
@@ -210,8 +219,21 @@ namespace GameFramework
 
                 case StoreFileNetworkMessage message:
                     NetworkFile fileToStore = message.File;
-                    
+
                     files[fileToStore.Id] = fileToStore;
+
+                    break;
+
+                case DirectNetworkMessage message:
+                    if (message.Destination == OwnId)
+                    {
+                        OnDirectMessage?.Invoke(message.From, message.Data);
+                    }
+                    else
+                    {
+                        var forwardThrough = GetClosestContactExcept(message.Destination);
+                        forwardThrough.NetworkConnection.Send(message);
+                    }
 
                     break;
             }

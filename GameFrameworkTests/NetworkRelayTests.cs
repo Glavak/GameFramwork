@@ -1,4 +1,5 @@
-﻿using GameFramework;
+﻿using System;
+using GameFramework;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
 
@@ -75,6 +76,29 @@ namespace GameFrameworkTests
 
             Assert.AreEqual(1, relay0.GetConnectedClientsCount());
             Assert.AreEqual(1, relay2.GetConnectedClientsCount());
+        }
+
+        [TestMethod]
+        public async Task TestDirectMessage()
+        {
+            await relay0.ConnectToNodeAsync(1);
+
+            await Task.Delay(100);
+
+            byte[] recieved = null;
+            Guid sender = Guid.Empty;
+            relay1.OnDirectMessage += (s, d) =>
+            {
+                sender = (Guid) s;
+                recieved = d;
+            };
+
+            relay0.SendDirectMessage(relay1.OwnId, new[] {(byte) 42});
+
+            await Task.Delay(100);
+
+            CollectionAssert.AreEqual(new[] { (byte)42 }, recieved);
+            Assert.AreEqual(relay0.OwnId, sender);
         }
 
         [TestMethod]
