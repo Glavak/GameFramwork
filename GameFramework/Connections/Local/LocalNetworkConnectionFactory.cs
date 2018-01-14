@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace GameFramework
@@ -9,6 +10,8 @@ namespace GameFramework
         INetworkConnectionFactory<LocalNetworkConnection, int>
     {
         public EventHandler<LocalNetworkConnection> OnClientConnected { get; set; }
+
+        public bool NatSimulation { get; set; } = false;
 
         private readonly ConcurrentBag<LocalNetworkConnection> pendingConnections =
             new ConcurrentBag<LocalNetworkConnection>();
@@ -49,6 +52,11 @@ namespace GameFramework
             int connectTo,
             EventHandler<INetworkMessage> onMessageRecievedHandler = null)
         {
+            if (parent.NodeFactories[connectTo].NatSimulation)
+            {
+                throw new IOException("This node is under NAT and can't be connected to");
+            }
+
             var connectionMeToOther = new LocalNetworkConnection(connectTo);
             var connectionOtherToMe = new LocalNetworkConnection(address);
 

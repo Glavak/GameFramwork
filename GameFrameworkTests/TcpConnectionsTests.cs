@@ -24,7 +24,7 @@ namespace GameFrameworkTests
             factoryA?.Dispose();
             factoryB?.Dispose();
         }
-        
+
         [TestMethod]
         public async Task TestConnect()
         {
@@ -56,14 +56,18 @@ namespace GameFrameworkTests
             INetworkMessage recievedOnA = null;
             connectionOnA.OnRecieve += (sender, message) => { recievedOnA = message; };
 
-            INetworkMessage sendFromB = new DirectNetworkMessage(DhtUtils.GeneratePlayerId(), DhtUtils.GeneratePlayerId(), new byte[] { 42 });
+            INetworkMessage sendFromB = new DirectNetworkMessage(
+                DhtUtils.GeneratePlayerId(),
+                DhtUtils.GeneratePlayerId(),
+                DhtUtils.GeneratePlayerId(),
+                new byte[] {42});
             connectionOnB.Send(sendFromB);
 
             await Task.Delay(100);
 
             // Assert:
             Assert.IsNotNull(recievedOnA);
-            Assert.AreEqual(42, ((DirectNetworkMessage)recievedOnA).Data[0]);
+            Assert.AreEqual(42, ((DirectNetworkMessage) recievedOnA).Data[0]);
         }
 
         [TestMethod]

@@ -1,4 +1,5 @@
-﻿using GameFramework;
+﻿using System.IO;
+using GameFramework;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
 
@@ -9,6 +10,7 @@ namespace GameFrameworkTests
     {
         private LocalNetworkConnectionFactory factoryA;
         private LocalNetworkConnectionFactory factoryB;
+        private LocalNetworkConnectionFactory factoryC;
 
         [TestInitialize]
         public void SetUp()
@@ -25,7 +27,7 @@ namespace GameFrameworkTests
             factoryA?.Dispose();
             factoryB?.Dispose();
         }
-        
+
         [TestMethod]
         public async Task TestConnect()
         {
@@ -57,14 +59,18 @@ namespace GameFrameworkTests
             INetworkMessage recievedOnA = null;
             connectionOnA.OnRecieve += (sender, message) => { recievedOnA = message; };
 
-            INetworkMessage sendFromB = new DirectNetworkMessage(DhtUtils.GeneratePlayerId(), DhtUtils.GeneratePlayerId(), new byte[] { 42 });
+            INetworkMessage sendFromB = new DirectNetworkMessage(
+                DhtUtils.GeneratePlayerId(),
+                DhtUtils.GeneratePlayerId(),
+                DhtUtils.GeneratePlayerId(),
+                new byte[] {42});
             connectionOnB.Send(sendFromB);
 
             await Task.Delay(100);
 
             // Assert:
             Assert.IsNotNull(recievedOnA);
-            Assert.AreEqual(42, ((DirectNetworkMessage)recievedOnA).Data[0]);
+            Assert.AreEqual(42, ((DirectNetworkMessage) recievedOnA).Data[0]);
         }
 
         [TestMethod]
@@ -88,6 +94,25 @@ namespace GameFrameworkTests
 
             // Assert:
             Assert.IsTrue(called);
+        }
+
+        [TestMethod]
+        public async Task TestNatSimulation()
+        {
+            factoryA.NatSimulation = true;
+
+            // Try to connect B to A:
+            bool called = false;
+            factoryA.OnClientConnected += (sender, connection) => { called = true; };
+
+            await Assert.ThrowsExceptionAsync<IOException>(async () =>
+            {
+                await factoryB.ConnectToAsync(0);
+            });
+
+            await Task.Delay(100);
+
+            Assert.IsFalse(called);
         }
     }
 }

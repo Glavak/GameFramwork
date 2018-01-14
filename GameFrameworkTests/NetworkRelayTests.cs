@@ -89,16 +89,46 @@ namespace GameFrameworkTests
             Guid sender = Guid.Empty;
             relay1.OnDirectMessage += (s, d) =>
             {
-                sender = (Guid) s;
+                sender = (Guid)s;
                 recieved = d;
             };
 
-            relay0.SendDirectMessage(relay1.OwnId, new[] {(byte) 42});
+            relay0.SendDirectMessage(relay1.OwnId, new[] { (byte)42 });
 
             await Task.Delay(100);
 
+            Assert.IsNotNull(recieved);
             CollectionAssert.AreEqual(new[] { (byte)42 }, recieved);
             Assert.AreEqual(relay0.OwnId, sender);
+        }
+
+        [TestMethod]
+        public async Task TestDirectMessageForwarded()
+        {
+            // So, that 1 and 2 had no way to connect
+            factory1.NatSimulation = true;
+            factory2.NatSimulation = true;
+
+            await relay1.ConnectToNodeAsync(0);
+            await relay2.ConnectToNodeAsync(0);
+
+            await Task.Delay(100);
+
+            byte[] recieved = null;
+            Guid sender = Guid.Empty;
+            relay2.OnDirectMessage += (s, d) =>
+            {
+                sender = (Guid)s;
+                recieved = d;
+            };
+
+            relay1.SendDirectMessage(relay2.OwnId, new[] { (byte)42 });
+
+            await Task.Delay(100);
+
+            Assert.IsNotNull(recieved);
+            CollectionAssert.AreEqual(new[] { (byte)42 }, recieved);
+            Assert.AreEqual(relay1.OwnId, sender);
         }
 
         [TestMethod]

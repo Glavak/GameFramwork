@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -10,7 +11,7 @@ namespace GameFramework
         INetworkRelay<TNetworkConnection, TNetworkAddress>
         where TNetworkConnection : INetworkConnection<TNetworkAddress>
     {
-        public EventHandler<byte[]> OnDirectMessage;
+        public EventHandler<byte[]> OnDirectMessage { get; set; }
 
         public List<Contact<TNetworkAddress>>[] KBuckets { get; set; }
         public Guid OwnId { get; }
@@ -60,15 +61,24 @@ namespace GameFramework
             disposed = true;
         }
 
-        public async Task ConnectToNodeAsync(TNetworkAddress address)
+        public async Task<bool> ConnectToNodeAsync(TNetworkAddress address)
         {
-            if (IsAddressAlreadyConnected(address)) return;
+            if (IsAddressAlreadyConnected(address)) return true;
 
-            TNetworkConnection connection = await connectionFactory.ConnectToAsync(address, OnMessageRecieved);
-            connection.OnConnectionDropped += OnConnectionDropped;
+            try
+            {
+                TNetworkConnection connection = await connectionFactory.ConnectToAsync(address, OnMessageRecieved);
+                connection.OnConnectionDropped += OnConnectionDropped;
 
-            HelloNetworkMessage message = new HelloNetworkMessage(OwnId);
-            connection.Send(message);
+                HelloNetworkMessage message = new HelloNetworkMessage(OwnId);
+                connection.Send(message);
+
+                return true;
+            }
+            catch (IOException)
+            {
+                return false;
+            }
         }
 
         public void GetFile(Guid fileId, EventHandler<NetworkFile> onFileRecieved)
@@ -94,7 +104,7 @@ namespace GameFramework
         public void SendDirectMessage(Guid target, byte[] data)
         {
             var closestNode = GetClosestContactExcept(target);
-            var message = new DirectNetworkMessage(OwnId, target, data);
+            var message = new DirectNetworkMessage(OwnId, OwnId, target, data);
             closestNode.NetworkConnection.Send(message);
         }
 
@@ -227,12 +237,19 @@ namespace GameFramework
                 case DirectNetworkMessage message:
                     if (message.Destination == OwnId)
                     {
-                        OnDirectMessage?.Invoke(message.From, message.Data);
+                        OnDirectMessage?.Invoke(message.Origin, message.Data);
                     }
                     else
                     {
-                        var forwardThrough = GetClosestContactExcept(message.Destination);
-                        forwardThrough.NetworkConnection.Send(message);
+                        var forwardThrough = GetClosestContactExcept(message.Destination, new List<Guid>
+                        {
+                            message.From,
+                            message.Origin // HACK: need more sophisticated routing algorithm
+                        });
+                        INetworkMessage forwardMessage =
+                            new DirectNetworkMessage(OwnId, message.Origin, message.Destination, message.Data);
+
+                        forwardThrough.NetworkConnection.Send(forwardMessage);
                     }
 
                     break;
