@@ -11,7 +11,7 @@ namespace GameFramework
         public EventHandler<INetworkMessage> OnRecieve { get; set; }
         public EventHandler OnConnectionDropped { get; set; }
 
-        public IPAddress Address => ((IPEndPoint)client.Client.RemoteEndPoint).Address;
+        public IPAddress Address => ((IPEndPoint) client.Client.RemoteEndPoint).Address;
 
         private readonly TcpClient client;
         private BinaryFormatter formatter;
@@ -20,7 +20,7 @@ namespace GameFramework
         public TcpNetworkConnection(TcpClient client)
         {
             this.client = client;
-            
+
             formatter = new BinaryFormatter();
         }
 

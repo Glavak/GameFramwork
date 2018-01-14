@@ -176,16 +176,20 @@ namespace GameFramework
 
                     foreach (var searchRequest in fileSearchRequests.Values)
                     {
-                        var closestContact = GetClosestContactExcept(searchRequest.FileId, searchRequest.NodesWithoutFile);
+                        var closestContact =
+                            GetClosestContactExcept(searchRequest.FileId, searchRequest.NodesWithoutFile);
 
                         if (closestContact == null)
                         {
                             //TODO: no file handling
                         }
-
-                        GetFileNetworkMessage getFileMessage = new GetFileNetworkMessage(OwnId, searchRequest.FileId);
-                        closestContact.NetworkConnection.Send(getFileMessage);
-                        searchRequest.NodesWithoutFile.Add(closestContact.Id);
+                        else
+                        {
+                            GetFileNetworkMessage getFileMessage =
+                                new GetFileNetworkMessage(OwnId, searchRequest.FileId);
+                            closestContact.NetworkConnection.Send(getFileMessage);
+                            searchRequest.NodesWithoutFile.Add(closestContact.Id);
+                        }
                     }
 
                     break;
@@ -201,6 +205,13 @@ namespace GameFramework
                         request.OnFound?.Invoke(this, recievedFile);
                         fileSearchRequests.Remove(recievedFile.Id);
                     }
+
+                    break;
+
+                case StoreFileNetworkMessage message:
+                    NetworkFile fileToStore = message.File;
+                    
+                    files[fileToStore.Id] = fileToStore;
 
                     break;
             }

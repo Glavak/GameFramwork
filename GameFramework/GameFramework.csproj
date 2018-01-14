@@ -51,6 +51,7 @@
     <Compile Include="Messages\DirectNetworkMessage.cs" />
     <Compile Include="Connections\INetworkConnection.cs" />
     <Compile Include="Messages\GetClosestNodesNetworkMessage.cs" />
+    <Compile Include="Messages\StoreFileNetworkMessage.cs" />
     <Compile Include="Messages\GotFileNetworkMessage.cs" />
     <Compile Include="Messages\GetFileNetworkMessage.cs" />
     <Compile Include="Messages\HelloNetworkMessage.cs" />

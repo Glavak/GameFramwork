@@ -8,6 +8,7 @@ namespace GameFramework
     {
         EventHandler<TConection> OnClientConnected { get; set; }
 
-        Task<TConection> ConnectToAsync(TAddress connectTo, EventHandler<INetworkMessage> onMessageRecievedHandler = null);
+        Task<TConection> ConnectToAsync(TAddress connectTo,
+            EventHandler<INetworkMessage> onMessageRecievedHandler = null);
     }
 }

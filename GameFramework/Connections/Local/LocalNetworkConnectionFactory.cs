@@ -10,7 +10,8 @@ namespace GameFramework
     {
         public EventHandler<LocalNetworkConnection> OnClientConnected { get; set; }
 
-        private readonly ConcurrentBag<LocalNetworkConnection> pendingConnections = new ConcurrentBag<LocalNetworkConnection>();
+        private readonly ConcurrentBag<LocalNetworkConnection> pendingConnections =
+            new ConcurrentBag<LocalNetworkConnection>();
 
         private readonly List<LocalNetworkConnection> ownedConnections = new List<LocalNetworkConnection>();
 

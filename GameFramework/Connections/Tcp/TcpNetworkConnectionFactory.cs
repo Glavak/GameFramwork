@@ -41,7 +41,8 @@ namespace GameFramework
             }, listeningCancellation.Token);
         }
 
-        public async Task<TcpNetworkConnection> ConnectToAsync(IPAddress connectTo, EventHandler<INetworkMessage> onMessageRecievedHandler = null)
+        public async Task<TcpNetworkConnection> ConnectToAsync(IPAddress connectTo,
+            EventHandler<INetworkMessage> onMessageRecievedHandler = null)
         {
             var client = new TcpClient();
             await client.ConnectAsync(connectTo, 4242);
