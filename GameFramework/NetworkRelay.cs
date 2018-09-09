@@ -208,8 +208,11 @@ namespace GameFramework
                     }
                     else
                     {
-                        closestContacts = GetClosestContacts(message.FileId, 10);
-                        replyMessage = new NodeListNetworkMessage<TNetworkAddress>(OwnId, closestContacts);
+                        GetFile(message.FileId, (s, f) =>
+                        {
+                            var reply = new GotFileNetworkMessage(OwnId, f);
+                            senderConnection.Send(reply);
+                        });
                     }
 
                     break;

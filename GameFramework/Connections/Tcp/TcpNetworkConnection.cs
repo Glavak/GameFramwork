@@ -26,6 +26,8 @@ namespace GameFramework
 
         public void Send(INetworkMessage message)
         {
+            if (disposed) return;
+
             formatter.Serialize(client.GetStream(), message);
         }
 

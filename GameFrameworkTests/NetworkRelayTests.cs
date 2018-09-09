@@ -164,6 +164,28 @@ namespace GameFrameworkTests
         }
 
         [TestMethod]
+        public async Task TestGetOwnFileForwarded()
+        {
+            // So, that 1 and 2 had no way to connect
+            factory1.NatSimulation = true;
+            factory2.NatSimulation = true;
+
+            await relay1.ConnectToNodeAsync(0);
+            await relay2.ConnectToNodeAsync(0);
+
+            await Task.Delay(100);
+
+            // Get file from node 2 on node 1:
+            NetworkFile file = null;
+            relay1.GetFile(relay2.OwnId, (s, f) => file = f);
+
+            await Task.Delay(100);
+
+            Assert.AreEqual(relay2.OwnId, file.Id);
+            Assert.AreEqual(FileType.PlayerData, file.FileType);
+        }
+
+        [TestMethod]
         public async Task TestGetOtherFile()
         {
             // Create file:

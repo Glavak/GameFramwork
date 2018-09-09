@@ -46,6 +46,8 @@ namespace GameFramework
 
         public void Send(INetworkMessage message)
         {
+            if (disposed) return;
+
             OtherEnd.pendingMessages.Enqueue(message);
         }
 
@@ -56,8 +58,7 @@ namespace GameFramework
 
         private void Dispose(bool disposing)
         {
-            if (disposed)
-                return;
+            if (disposed) return;
 
             if (disposing)
             {
