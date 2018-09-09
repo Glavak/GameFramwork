@@ -1,18 +1,25 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace GameFramework
 {
     [Serializable]
-    public class GetClosestNodesNetworkMessage : INetworkMessage
+    public class GetFileNetworkMessage : INetworkMessage
     {
         public Guid From { get; }
 
         public Guid FileId { get; }
 
-        public GetClosestNodesNetworkMessage(Guid from, Guid fileId)
+        /// <summary>
+        /// Nodes that have been checked not to have this file
+        /// </summary>
+        public HashSet<Guid> VisitedNodes { get; }
+
+        public GetFileNetworkMessage(Guid from, Guid fileId, HashSet<Guid> visitedNodes)
         {
             From = from;
             FileId = fileId;
+            VisitedNodes = visitedNodes;
         }
     }
 }

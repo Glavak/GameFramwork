@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace GameFramework
@@ -86,6 +87,11 @@ namespace GameFramework
 
         public void GetFile(Guid fileId, EventHandler<NetworkFile> onFileRecieved)
         {
+            GetFile(fileId, onFileRecieved, null);
+        }
+
+        public void GetFile(Guid fileId, EventHandler<NetworkFile> onFileRecieved, HashSet<Guid> nodesWithoutFile)
+        {
             if (files.TryGetValue(fileId, out NetworkFile file))
             {
                 if (file.Owner != OwnId &&
@@ -107,15 +113,23 @@ namespace GameFramework
                 }
             }
 
-            var searchRequest = new FileSearchRequest(fileId, onFileRecieved);
-            fileSearchRequests.Add(fileId, searchRequest);
+            if (!fileSearchRequests.TryGetValue(fileId, out FileSearchRequest searchRequest))
+            {
+                searchRequest = new FileSearchRequest(fileId, onFileRecieved);
+                searchRequest.NodesWithoutFile.Add(OwnId);
+                fileSearchRequests.Add(fileId, searchRequest);
+            }
+            else
+            {
+                searchRequest.OnFound += onFileRecieved;
+            }
+
+            if (nodesWithoutFile != null) searchRequest.NodesWithoutFile.UnionWith(nodesWithoutFile);
 
             var contact = GetClosestContactExcept(fileId);
 
-            GetFileNetworkMessage message = new GetFileNetworkMessage(OwnId, fileId);
+            GetFileNetworkMessage message = new GetFileNetworkMessage(OwnId, fileId, searchRequest.NodesWithoutFile);
             contact.NetworkConnection.Send(message);
-
-            searchRequest.NodesWithoutFile.Add(contact.Id);
         }
 
         public Guid CreateNewFile(Dictionary<string, string> entries)
@@ -217,7 +231,7 @@ namespace GameFramework
                         {
                             var reply = new GotFileNetworkMessage(OwnId, f);
                             senderConnection.Send(reply);
-                        });
+                        }, message.VisitedNodes);
                     }
 
                     break;
@@ -234,25 +248,8 @@ namespace GameFramework
                     {
                         if (node.Key != OwnId)
                         {
+                            // Can block here, all our other messages will be queued until we finish
                             ConnectToNodeAsync(node.Value).Wait();
-                        }
-                    }
-
-                    foreach (var searchRequest in fileSearchRequests.Values)
-                    {
-                        var closestContact =
-                            GetClosestContactExcept(searchRequest.FileId, searchRequest.NodesWithoutFile);
-
-                        if (closestContact == null)
-                        {
-                            //TODO: no file handling
-                        }
-                        else
-                        {
-                            GetFileNetworkMessage getFileMessage =
-                                new GetFileNetworkMessage(OwnId, searchRequest.FileId);
-                            closestContact.NetworkConnection.Send(getFileMessage);
-                            searchRequest.NodesWithoutFile.Add(closestContact.Id);
                         }
                     }
 

@@ -205,12 +205,12 @@ namespace GameFrameworkTests
             // Modify PlayerData file at node 0:
             relay0.UpdateFile(relay0.OwnId, new Dictionary<string, string>{{"nickname", "new!"}});
 
-            // Get PlayerData file again:
+            // Get PlayerData file again (should be taken from cache):
             file = null;
             relay1.GetFile(relay0.OwnId, (s, f) => file = f);
 
             await Task.Delay(100);
-
+            
             Assert.AreEqual("old :c", file.Entries["nickname"]);
         }
 
