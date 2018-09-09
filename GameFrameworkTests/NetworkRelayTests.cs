@@ -50,10 +50,23 @@ namespace GameFrameworkTests
         }
 
         [TestMethod]
-        public async Task TestConnectsToNeighbours()
+        public async Task TestConnectsToNeighbours1()
         {
             await relay0.ConnectToNodeAsync(1);
             await relay0.ConnectToNodeAsync(2);
+
+            await Task.Delay(100);
+
+            Assert.AreEqual(2, relay0.GetConnectedClientsCount());
+            Assert.AreEqual(2, relay1.GetConnectedClientsCount());
+            Assert.AreEqual(2, relay2.GetConnectedClientsCount());
+        }
+
+        [TestMethod]
+        public async Task TestConnectsToNeighbours2()
+        {
+            await relay1.ConnectToNodeAsync(2);
+            await relay0.ConnectToNodeAsync(1);
 
             await Task.Delay(100);
 

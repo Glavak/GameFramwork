@@ -50,8 +50,7 @@ namespace GameFramework
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposed)
-                return;
+            if (disposed) return;
 
             if (disposing)
             {
@@ -250,6 +249,7 @@ namespace GameFramework
                             new DirectNetworkMessage(OwnId, message.Origin, message.Destination, message.Data);
 
                         forwardThrough.NetworkConnection.Send(forwardMessage);
+                        forwardThrough.LastUseful = DateTime.Now;
                     }
 
                     break;

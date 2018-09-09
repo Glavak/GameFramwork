@@ -8,7 +8,7 @@ namespace GameFramework
     {
         public Guid From { get; }
 
-        public Dictionary<Guid, TNetworkAddress> Nodes { get; set; }
+        public Dictionary<Guid, TNetworkAddress> Nodes { get; }
 
         public NodeListNetworkMessage(Guid @from, Dictionary<Guid, TNetworkAddress> nodes)
         {
