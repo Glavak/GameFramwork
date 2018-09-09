@@ -4,7 +4,7 @@ namespace GameFramework.Logging
 {
     public class FileLogger : ILogger
     {
-        private StreamWriter writer;
+        private readonly StreamWriter writer;
 
         public FileLogger(string filename)
         {

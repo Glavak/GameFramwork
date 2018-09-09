@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GameFramework.Files
+namespace GameFramework
 {
     public static class FileTypeExtensions
     {

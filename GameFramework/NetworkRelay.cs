@@ -41,7 +41,7 @@ namespace GameFramework
 
             var builder = ImmutableDictionary.CreateBuilder<string, string>();
             builder.Add("nickname", "client");
-            var ownFile = new NetworkFile(OwnId, OwnId, 
+            var ownFile = new NetworkFile(OwnId, OwnId,
                 DateTime.Now, FileType.PlayerData,
                 builder.ToImmutable());
             files.Add(OwnId, ownFile);
@@ -88,20 +88,29 @@ namespace GameFramework
         {
             if (files.TryGetValue(fileId, out NetworkFile file))
             {
-                onFileRecieved?.Invoke(this, file);
+                if (file.Owner != OwnId &&
+                    file.RecievedFromOrigin + file.FileType.GetCacheLifetime() < DateTime.Now)
+                {
+                    // Expired
+                    // TODO: if file not found, still return expired one
+                    files.Remove(fileId);
+                }
+                else
+                {
+                    onFileRecieved?.Invoke(this, file);
+                    return;
+                }
             }
-            else
-            {
-                var searchRequest = new FileSearchRequest(fileId, onFileRecieved);
-                fileSearchRequests.Add(fileId, searchRequest);
 
-                var contact = GetClosestContactExcept(fileId);
+            var searchRequest = new FileSearchRequest(fileId, onFileRecieved);
+            fileSearchRequests.Add(fileId, searchRequest);
 
-                GetFileNetworkMessage message = new GetFileNetworkMessage(OwnId, fileId);
-                contact.NetworkConnection.Send(message);
+            var contact = GetClosestContactExcept(fileId);
 
-                searchRequest.NodesWithoutFile.Add(contact.Id);
-            }
+            GetFileNetworkMessage message = new GetFileNetworkMessage(OwnId, fileId);
+            contact.NetworkConnection.Send(message);
+
+            searchRequest.NodesWithoutFile.Add(contact.Id);
         }
 
         public Guid CreateNewFile(Dictionary<string, string> entries)
@@ -110,15 +119,23 @@ namespace GameFramework
             files.Add(file.Id, file);
             return file.Id;
         }
-        
-        public void UpdateFile(NetworkFile file)
+
+        public void UpdateFile(Guid fileId, Dictionary<string, string> entries)
         {
-            if (!files.ContainsKey(file.Id))
+            if (!files.TryGetValue(fileId, out NetworkFile file))
             {
                 throw new FrameworkException("No such file exists");
             }
 
-            files[file.Id] = file;
+            if (file.Owner != Guid.Empty &&
+                file.Owner != OwnId)
+            {
+                throw new FrameworkException("File modification not allowed");
+            }
+
+            files[file.Id] = new NetworkFile(file.Id, file.Owner,
+                DateTime.Now, file.FileType,
+                entries.ToImmutableDictionary());
         }
 
         public void SendDirectMessage(Guid target, byte[] data)
