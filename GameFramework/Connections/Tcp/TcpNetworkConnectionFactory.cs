@@ -12,7 +12,7 @@ namespace GameFramework
         public EventHandler<TcpNetworkConnection> OnClientConnected { get; set; }
 
         private CancellationTokenSource listeningCancellation;
-        private bool disposed = false;
+        private bool disposed;
 
         public TcpNetworkConnectionFactory(int listeningPort)
         {

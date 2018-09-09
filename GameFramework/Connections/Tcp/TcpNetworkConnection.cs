@@ -15,7 +15,7 @@ namespace GameFramework
 
         private readonly TcpClient client;
         private BinaryFormatter formatter;
-        private bool disposed = false;
+        private bool disposed;
 
         public TcpNetworkConnection(TcpClient client)
         {

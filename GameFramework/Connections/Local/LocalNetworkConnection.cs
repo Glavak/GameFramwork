@@ -14,7 +14,7 @@ namespace GameFramework
 
         private readonly ConcurrentQueue<INetworkMessage> pendingMessages = new ConcurrentQueue<INetworkMessage>();
 
-        private bool disposed = false;
+        private bool disposed;
 
         public LocalNetworkConnection(int addressTo)
         {

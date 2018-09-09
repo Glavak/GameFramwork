@@ -37,5 +37,14 @@ namespace GameFramework
             FileType = fileType;
             Entries = entries;
         }
+
+        /// <summary>
+        /// Creates copy of this NetworkFile, setting RecievedFromOrigin to current date
+        /// </summary>
+        /// <returns></returns>
+        internal NetworkFile CopyRefreshingOriginated()
+        {
+            return new NetworkFile(Id, Owner, DateTime.Now, FileType, Entries);
+        }
     }
 }

@@ -186,6 +186,35 @@ namespace GameFrameworkTests
         }
 
         [TestMethod]
+        public async Task TestFileCaching()
+        {
+            // Set nickname
+            relay0.UpdateFile(relay0.OwnId, new Dictionary<string, string> { { "nickname", "old :c" } });
+            await relay0.ConnectToNodeAsync(1);
+
+            await Task.Delay(100);
+
+            // Get PlayerData file from node 0 on node 1:
+            NetworkFile file = null;
+            relay1.GetFile(relay0.OwnId, (s, f) => file = f);
+
+            await Task.Delay(100);
+
+            Assert.AreEqual("old :c", file.Entries["nickname"]);
+
+            // Modify PlayerData file at node 0:
+            relay0.UpdateFile(relay0.OwnId, new Dictionary<string, string>{{"nickname", "new!"}});
+
+            // Get PlayerData file again:
+            file = null;
+            relay1.GetFile(relay0.OwnId, (s, f) => file = f);
+
+            await Task.Delay(100);
+
+            Assert.AreEqual("old :c", file.Entries["nickname"]);
+        }
+
+        [TestMethod]
         public async Task TestGetOtherFile()
         {
             // Create file:

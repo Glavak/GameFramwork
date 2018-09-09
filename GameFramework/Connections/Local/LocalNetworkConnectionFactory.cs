@@ -11,7 +11,7 @@ namespace GameFramework
     {
         public EventHandler<LocalNetworkConnection> OnClientConnected { get; set; }
 
-        public bool NatSimulation { get; set; } = false;
+        public bool NatSimulation { get; set; }
 
         private readonly ConcurrentBag<LocalNetworkConnection> pendingConnections =
             new ConcurrentBag<LocalNetworkConnection>();
@@ -20,7 +20,7 @@ namespace GameFramework
 
         private readonly int address;
         private readonly LocalNetworkConnectionHub parent;
-        private bool disposed = false;
+        private bool disposed;
 
         public LocalNetworkConnectionFactory(int address, LocalNetworkConnectionHub parent)
         {
@@ -33,7 +33,7 @@ namespace GameFramework
         {
             Task.Run(async () =>
             {
-                while (true)
+                while (!disposed)
                 {
                     if (pendingConnections.TryTake(out LocalNetworkConnection connection))
                     {

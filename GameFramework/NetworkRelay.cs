@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace GameFramework
 {
-    public class NetworkRelay<TNetworkConnection, TNetworkAddress> :
+    public sealed class NetworkRelay<TNetworkConnection, TNetworkAddress> :
         INetworkRelay<TNetworkConnection, TNetworkAddress>
         where TNetworkConnection : INetworkConnection<TNetworkAddress>
     {
@@ -19,7 +19,7 @@ namespace GameFramework
 
         private readonly INetworkConnectionFactory<TNetworkConnection, TNetworkAddress> connectionFactory;
 
-        private bool disposed = false;
+        private bool disposed;
 
         private readonly Dictionary<Guid, NetworkFile> files = new Dictionary<Guid, NetworkFile>();
 
@@ -52,7 +52,7 @@ namespace GameFramework
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (disposed) return;
 
@@ -97,6 +97,11 @@ namespace GameFramework
                 }
                 else
                 {
+                    if (file.Owner == OwnId)
+                    {
+                        file = file.CopyRefreshingOriginated();
+                    }
+
                     onFileRecieved?.Invoke(this, file);
                     return;
                 }
