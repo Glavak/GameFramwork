@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace GameFramework
 {
@@ -13,11 +13,12 @@ namespace GameFramework
         /// </summary>
         public DateTime RecievedFromOrigin { get; }
 
-        public Dictionary<string, string> entries = new Dictionary<string, string>();
+        public ImmutableDictionary<string, string> Entries { get; }
 
-        public NetworkFile(Guid id)
+        public NetworkFile(Guid id, ImmutableDictionary<string, string> entries)
         {
             Id = id;
+            Entries = entries;
         }
     }
 }

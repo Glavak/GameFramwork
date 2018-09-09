@@ -12,6 +12,10 @@ namespace GameFramework
 
         void GetFile(Guid fileId, EventHandler<NetworkFile> onFileRecieved);
 
+        void SaveNewFile(NetworkFile file);
+
+        void UpdateFile(NetworkFile file);
+
         void SendDirectMessage(Guid target, byte[] data);
     }
 }

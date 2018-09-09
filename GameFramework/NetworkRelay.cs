@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -38,8 +39,9 @@ namespace GameFramework
 
             OwnId = DhtUtils.GeneratePlayerId();
 
-            var ownFile = new NetworkFile(OwnId);
-            ownFile.entries.Add("nickname", "client");
+            var builder = ImmutableDictionary.CreateBuilder<string, string>();
+            builder.Add("nickname", "client");
+            var ownFile = new NetworkFile(OwnId, builder.ToImmutable());
             files.Add(OwnId, ownFile);
         }
 
@@ -98,6 +100,26 @@ namespace GameFramework
 
                 searchRequest.NodesWithoutFile.Add(contact.Id);
             }
+        }
+
+        public void SaveNewFile(NetworkFile file)
+        {
+            if (files.ContainsKey(file.Id))
+            {
+                throw new FrameworkException("File already exists");
+            }
+
+            files.Add(file.Id, file);
+        }
+
+        public void UpdateFile(NetworkFile file)
+        {
+            if (!files.ContainsKey(file.Id))
+            {
+                throw new FrameworkException("No such file exists");
+            }
+
+            files[file.Id] = file;
         }
 
         public void SendDirectMessage(Guid target, byte[] data)

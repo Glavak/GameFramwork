@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using GameFramework;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
@@ -151,12 +152,42 @@ namespace GameFrameworkTests
 
             await Task.Delay(100);
 
+            // Get file from node 0 on node 1:
             NetworkFile file = null;
             relay1.GetFile(relay0.OwnId, (s, f) => file = f);
 
             await Task.Delay(100);
 
             Assert.IsNotNull(file);
+            Assert.AreEqual(relay0.OwnId, file.Id);
+        }
+
+        [TestMethod]
+        public async Task TestGetOtherFile()
+        {
+            // Create & save file:
+            Guid fileId = DhtUtils.GenerateFileId();
+
+            var builder = ImmutableDictionary.CreateBuilder<string, string>();
+            builder.Add("field", "value");
+
+            NetworkFile testFile = new NetworkFile(fileId, builder.ToImmutable());
+            relay0.SaveNewFile(testFile);
+
+            // Connect nodes:
+            await relay1.ConnectToNodeAsync(0);
+
+            await Task.Delay(100);
+
+            // Get file from node 0 on node 1:
+            NetworkFile file = null;
+            relay1.GetFile(fileId, (s, f) => file = f);
+
+            await Task.Delay(100);
+
+            Assert.IsNotNull(file);
+            Assert.AreEqual(fileId, file.Id);
+            Assert.AreEqual("value", file.Entries["field"]);
         }
     }
 }

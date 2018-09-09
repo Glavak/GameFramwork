@@ -69,5 +69,19 @@ namespace GameFramework
 
             return g;
         }
+
+        public static Guid GenerateFileId()
+        {
+            byte[] bytes = new byte[8];
+            random.NextBytes(bytes);
+
+            // For now leave only 2 bytes random non zero, for easy debugging
+            bytes[0] = bytes[1] = bytes[2] = bytes[3] = bytes[4] = 0;
+            bytes[5] = 1;
+
+            Guid g = new Guid(0, 0, 0, bytes);
+
+            return g;
+        }
     }
 }
