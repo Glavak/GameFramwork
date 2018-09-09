@@ -41,7 +41,9 @@ namespace GameFramework
 
             var builder = ImmutableDictionary.CreateBuilder<string, string>();
             builder.Add("nickname", "client");
-            var ownFile = new NetworkFile(OwnId, builder.ToImmutable());
+            var ownFile = new NetworkFile(OwnId, OwnId, 
+                DateTime.Now, FileType.PlayerData,
+                builder.ToImmutable());
             files.Add(OwnId, ownFile);
         }
 
@@ -102,16 +104,13 @@ namespace GameFramework
             }
         }
 
-        public void SaveNewFile(NetworkFile file)
+        public Guid CreateNewFile(Dictionary<string, string> entries)
         {
-            if (files.ContainsKey(file.Id))
-            {
-                throw new FrameworkException("File already exists");
-            }
-
+            var file = new NetworkFile(DhtUtils.GenerateFileId(), OwnId, entries.ToImmutableDictionary());
             files.Add(file.Id, file);
+            return file.Id;
         }
-
+        
         public void UpdateFile(NetworkFile file)
         {
             if (!files.ContainsKey(file.Id))

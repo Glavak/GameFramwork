@@ -65,7 +65,7 @@ namespace GameFramework
             // For now leave only 2 bytes random non zero, for easy debugging
             bytes[0] = bytes[1] = bytes[2] = bytes[3] = bytes[4] = bytes[5] = 0;
 
-            Guid g = new Guid(0, 0, 0, bytes);
+            Guid g = new Guid(1, 0, 0, bytes);
 
             return g;
         }
@@ -76,10 +76,9 @@ namespace GameFramework
             random.NextBytes(bytes);
 
             // For now leave only 2 bytes random non zero, for easy debugging
-            bytes[0] = bytes[1] = bytes[2] = bytes[3] = bytes[4] = 0;
-            bytes[5] = 1;
+            bytes[0] = bytes[1] = bytes[2] = bytes[3] = bytes[4] = bytes[5] = 0;
 
-            Guid g = new Guid(0, 0, 0, bytes);
+            Guid g = new Guid(2, 0, 0, bytes);
 
             return g;
         }

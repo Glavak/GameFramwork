@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using GameFramework;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -159,20 +160,16 @@ namespace GameFrameworkTests
             await Task.Delay(100);
 
             Assert.IsNotNull(file);
+            Assert.AreEqual(FileType.PlayerData, file.FileType);
             Assert.AreEqual(relay0.OwnId, file.Id);
         }
 
         [TestMethod]
         public async Task TestGetOtherFile()
         {
-            // Create & save file:
-            Guid fileId = DhtUtils.GenerateFileId();
-
-            var builder = ImmutableDictionary.CreateBuilder<string, string>();
-            builder.Add("field", "value");
-
-            NetworkFile testFile = new NetworkFile(fileId, builder.ToImmutable());
-            relay0.SaveNewFile(testFile);
+            // Create file:
+            var entries = new Dictionary<string, string> {{"field", "value"}};
+            Guid fileId = relay0.CreateNewFile(entries);
 
             // Connect nodes:
             await relay1.ConnectToNodeAsync(0);
@@ -187,6 +184,7 @@ namespace GameFrameworkTests
 
             Assert.IsNotNull(file);
             Assert.AreEqual(fileId, file.Id);
+            Assert.AreEqual(FileType.Custom, file.FileType);
             Assert.AreEqual("value", file.Entries["field"]);
         }
     }

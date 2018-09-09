@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace GameFramework
@@ -12,7 +13,7 @@ namespace GameFramework
 
         void GetFile(Guid fileId, EventHandler<NetworkFile> onFileRecieved);
 
-        void SaveNewFile(NetworkFile file);
+        Guid CreateNewFile(Dictionary<string, string> entries);
 
         void UpdateFile(NetworkFile file);
 
