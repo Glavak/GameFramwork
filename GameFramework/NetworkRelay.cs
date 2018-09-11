@@ -9,8 +9,7 @@ using System.Threading.Tasks;
 
 namespace GameFramework
 {
-    public sealed class NetworkRelay<TNetworkConnection, TNetworkAddress> :
-        INetworkRelay<TNetworkConnection, TNetworkAddress>
+    public sealed class NetworkRelay<TNetworkConnection, TNetworkAddress> : INetworkRelay<TNetworkAddress>
         where TNetworkConnection : INetworkConnection<TNetworkAddress>
     {
         public EventHandler<byte[]> OnDirectMessage { get; set; }
@@ -253,6 +252,8 @@ namespace GameFramework
                         }
                     }
 
+                    contact.LastUseful = DateTime.Now;
+
                     break;
 
                 case GotFileNetworkMessage message:
@@ -260,11 +261,11 @@ namespace GameFramework
 
                     if (fileSearchRequests.TryGetValue(recievedFile.Id, out FileSearchRequest request))
                     {
-                        contact.LastUseful = DateTime.Now;
-
                         files.Add(recievedFile.Id, recievedFile); // Cache it, in case it's needed later
                         request.OnFound?.Invoke(this, recievedFile);
                         fileSearchRequests.Remove(recievedFile.Id);
+
+                        contact.LastUseful = DateTime.Now;
                     }
 
                     break;
@@ -280,6 +281,7 @@ namespace GameFramework
                     if (message.Destination == OwnId)
                     {
                         OnDirectMessage?.Invoke(message.Origin, message.Data);
+                        contact.LastUseful = DateTime.Now;
                     }
                     else
                     {
