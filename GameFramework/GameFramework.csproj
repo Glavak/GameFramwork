@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BitsUtils.cs" />
     <Compile Include="Connections\INetworkConnectionFactory.cs" />
     <Compile Include="Connections\Local\LocalNetworkConnection.cs" />
     <Compile Include="Connections\Local\LocalNetworkConnectionHub.cs" />

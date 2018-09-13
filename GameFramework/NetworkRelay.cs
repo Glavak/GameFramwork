@@ -280,7 +280,10 @@ namespace GameFramework
                 case DirectNetworkMessage message:
                     if (message.Destination == OwnId)
                     {
-                        OnDirectMessage?.Invoke(message.Origin, message.Data);
+                        Console.WriteLine(OwnId + " Direct recieved, handler = " + (OnDirectMessage == null ? "nul" : "nn"));
+                        // HACK: Fix with something normal
+                        while (OnDirectMessage == null) Task.Delay(5).Wait();
+                        OnDirectMessage.Invoke(message.Origin, message.Data);
                         contact.LastUseful = DateTime.Now;
                     }
                     else

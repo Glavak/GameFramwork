@@ -27,13 +27,13 @@ namespace GameFramework
             {
                 while (!disposed)
                 {
-                    if (pendingMessages.TryDequeue(out INetworkMessage message))
+                    if (OnRecieve != null && pendingMessages.TryDequeue(out INetworkMessage message))
                     {
-                        OnRecieve?.Invoke(this, message);
+                        OnRecieve.Invoke(this, message);
                     }
-                    else if (OtherEnd.disposed)
+                    else if (OnConnectionDropped != null && OtherEnd.disposed)
                     {
-                        OnConnectionDropped?.Invoke(this, null);
+                        OnConnectionDropped.Invoke(this, null);
                         Dispose(true);
                     }
                     else
