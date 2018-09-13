@@ -35,15 +35,13 @@ namespace TicTacToe
             {
                 case GameState.FlippingCoin:
                     int opponentPriority = BitsUtils.BytesToInt(bytes);
-                    Console.WriteLine(relay.OwnId + " ondir" + priority + " " + opponentPriority + " " + Thread.CurrentThread.ManagedThreadId);
+                    Console.WriteLine(relay.OwnId + " ondir" + priority + " " + opponentPriority + " " +
+                                      Thread.CurrentThread.ManagedThreadId);
                     if (priority > opponentPriority)
                     {
                         state = GameState.OurTurn;
                         isPlayingX = true;
-                        Invoke(new MethodInvoker(() =>
-                        {
-                            labelStatus.Text = "Your turn, it's your day!";
-                        }));
+                        Invoke(new MethodInvoker(() => { labelStatus.Text = "Your turn, it's your day!"; }));
                     }
                     else if (priority < opponentPriority)
                     {
@@ -70,6 +68,7 @@ namespace TicTacToe
                         labelStatus.Text = "Your turn";
                         SetFieldInteractable(true);
                     }));
+                    CheckGameOver();
                     break;
             }
         }
@@ -104,6 +103,8 @@ namespace TicTacToe
                     if (o.Equals(buttons[x, y]))
                     {
                         MakeTurn(x, y);
+                        CheckGameOver();
+                        return;
                     }
                 }
             }
@@ -128,12 +129,61 @@ namespace TicTacToe
                 }
             }
         }
+
+        private void CheckGameOver()
+        {
+            // Verticals
+            for (int x = 0; x < 3; x++)
+            {
+                if (buttons[x, 0].Text == buttons[x, 1].Text && buttons[x, 2].Text == buttons[x, 1].Text)
+                {
+                    SetWin(buttons[x, 0].Text);
+                }
+            }
+
+            // Horizontals
+            for (int y = 0; y < 3; y++)
+            {
+                if (buttons[0, y].Text == buttons[1, y].Text && buttons[2, y].Text == buttons[1, y].Text)
+                {
+                    SetWin(buttons[0, y].Text);
+                }
+            }
+
+            // Diag
+            if (buttons[0, 0].Text == buttons[1, 1].Text && buttons[2, 2].Text == buttons[1, 1].Text)
+            {
+                SetWin(buttons[0, 0].Text);
+            }
+
+            // Anti-diag
+            if (buttons[0, 2].Text == buttons[1, 1].Text && buttons[2, 0].Text == buttons[1, 1].Text)
+            {
+                SetWin(buttons[1, 1].Text);
+            }
+        }
+
+        private void SetWin(string winner)
+        {
+            if (winner == "") return;
+
+            state = GameState.GameOver;
+
+            Invoke(new MethodInvoker(() =>
+            {
+                if (winner == "X" ^ isPlayingX) labelStatus.Text = "You lost :c";
+                else labelStatus.Text = "You win, congrats!";
+
+                SetFieldInteractable(false);
+            }));
+        }
     }
 
     enum GameState
     {
         FlippingCoin,
         OurTurn,
-        OpponentTurn
+        OpponentTurn,
+        GameOver
     }
 }
