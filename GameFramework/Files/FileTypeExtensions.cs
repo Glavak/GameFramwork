@@ -14,6 +14,8 @@ namespace GameFramework
                     return TimeSpan.FromMinutes(1);
                 case FileType.Custom:
                     return TimeSpan.Zero;
+                case FileType.Matchmaking:
+                    return TimeSpan.FromSeconds(5);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(fileType), fileType, null);
             }

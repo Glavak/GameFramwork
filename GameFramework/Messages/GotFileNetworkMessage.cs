@@ -11,10 +11,10 @@ namespace GameFramework
 
         public NetworkFile File { get; }
 
-        public GotFileNetworkMessage(Guid from, NetworkFile file)
+        public GotFileNetworkMessage(Guid from, Guid fileId, NetworkFile file)
         {
             From = from;
-            FileId = file.Id;
+            FileId = fileId;
             File = file;
         }
     }

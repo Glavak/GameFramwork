@@ -18,6 +18,8 @@ namespace GameFrameworkTests
         private LocalNetworkConnectionFactory factory1;
         private LocalNetworkConnectionFactory factory2;
 
+        private readonly Guid matchmakingFileId = DhtUtils.GenerateFileId();
+
         [TestInitialize]
         public void SetUp()
         {
@@ -27,9 +29,9 @@ namespace GameFrameworkTests
             factory1 = hub.CreateNodeFactory();
             factory2 = hub.CreateNodeFactory();
 
-            relay0 = new NetworkRelay<LocalNetworkConnection, int>(factory0);
-            relay1 = new NetworkRelay<LocalNetworkConnection, int>(factory1);
-            relay2 = new NetworkRelay<LocalNetworkConnection, int>(factory2);
+            relay0 = new NetworkRelay<LocalNetworkConnection, int>(factory0, matchmakingFileId);
+            relay1 = new NetworkRelay<LocalNetworkConnection, int>(factory1, matchmakingFileId);
+            relay2 = new NetworkRelay<LocalNetworkConnection, int>(factory2, matchmakingFileId);
         }
 
         [TestCleanup]
@@ -273,6 +275,29 @@ namespace GameFrameworkTests
         }
 
         [TestMethod]
+        public async Task TestGetNotExistingFile()
+        {
+            await relay1.ConnectToNodeAsync(0);
+            await relay1.ConnectToNodeAsync(2);
+
+            await Task.Delay(100);
+
+            // Get not existing file on node 1:
+            NetworkFile file = null;
+            bool callbackCalled = false;
+            relay1.GetFile(DhtUtils.GenerateFileId(), (s, f) =>
+            {
+                file = f;
+                callbackCalled = true;
+            });
+
+            await Task.Delay(100);
+
+            Assert.IsNull(file);
+            Assert.IsTrue(callbackCalled);
+        }
+
+        [TestMethod]
         public async Task TestGetOfflinePlayerFile()
         {
             await relay0.ConnectToNodeAsync(1);
@@ -305,27 +330,24 @@ namespace GameFrameworkTests
         {
             await relay0.ConnectToNodeAsync(1);
             await relay0.ConnectToNodeAsync(2);
+            
+            var entries = new Dictionary<string, string> { { "field1", "value1" } };
+            relay0.UpdateFile(matchmakingFileId, entries);
+
+            entries = new Dictionary<string, string> { { "field2", "value2" } };
+            relay1.UpdateFile(matchmakingFileId, entries);
 
             await Task.Delay(100);
 
-            // Get file from node 0 on node 1:
-            relay1.GetFile(relay0.OwnId, (s, f) => { Console.WriteLine(); });
-
-            await Task.Delay(100);
-
-            // Disable node 0:
-            relay0.Dispose();
-
-            await Task.Delay(100);
-
-            // Get file from node 0 on node 2:
+            // Get file on node 2, it should ask other node, and it should ask remaning node for it and merge:
             NetworkFile file = null;
-            relay2.GetFile(relay0.OwnId, (s, f) => file = f);
+            relay2.GetFile(matchmakingFileId, (s, f) => { file = f; });
 
             await Task.Delay(100);
 
-            Assert.AreEqual(relay0.OwnId, file.Id);
-            Assert.AreEqual(FileType.PlayerData, file.FileType);
+            Assert.AreEqual(FileType.Matchmaking, file.FileType);
+            Assert.AreEqual("value1", file.Entries["field1"]);
+            Assert.AreEqual("value2", file.Entries["field2"]);
         }
     }
 }

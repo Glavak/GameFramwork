@@ -30,7 +30,8 @@ namespace GameFramework
         private readonly Dictionary<Guid, FileSearchRequest> fileSearchRequests =
             new Dictionary<Guid, FileSearchRequest>();
 
-        public NetworkRelay(INetworkConnectionFactory<TNetworkConnection, TNetworkAddress> connectionFactory)
+        public NetworkRelay(INetworkConnectionFactory<TNetworkConnection, TNetworkAddress> connectionFactory,
+            Guid matchmakingFileId)
         {
             KBuckets = new List<Contact<TNetworkAddress>>[128];
             for (int i = 0; i < KBuckets.Length; i++)
@@ -50,7 +51,11 @@ namespace GameFramework
                 builder.ToImmutable());
             files.Add(OwnId, ownFile);
 
-            Logger = new PrefixedLogger(new ConsoleLogger(), OwnId.ToString() + " | ");
+            Logger = new PrefixedLogger(new ConsoleLogger(), OwnId + " | ");
+
+            files.Add(matchmakingFileId,
+                new NetworkFile(matchmakingFileId, Guid.Empty, DateTime.MinValue, FileType.Matchmaking,
+                    ImmutableDictionary<string, string>.Empty));
         }
 
         public void Dispose()
@@ -133,11 +138,11 @@ namespace GameFramework
 
             if (nodesWithoutFile != null) searchRequest.NodesWithoutFile.UnionWith(nodesWithoutFile);
 
-            var contact = GetClosestContactExcept(fileId);
+            var contact = GetClosestContactExcept(fileId, searchRequest.NodesWithoutFile);
             if (contact == null)
             {
                 // No more contacts that can have this file, return expired one, or null
-                Logger.Info("No suitable contacts found, no such dile exists");
+                Logger.Info("No suitable contacts found, no such file exists");
                 onFileRecieved?.Invoke(this, file);
             }
             else
@@ -170,7 +175,7 @@ namespace GameFramework
             }
 
             files[file.Id] = new NetworkFile(file.Id, file.Owner,
-                DateTime.Now, file.FileType,
+                file.RecievedFromOrigin, file.FileType,
                 entries.ToImmutableDictionary());
         }
 
@@ -240,22 +245,12 @@ namespace GameFramework
                 case GetFileNetworkMessage message:
                     Logger.Info("GetFileNetworkMessage for file {0} recieved", message.FileId);
 
-                    if (files.TryGetValue(message.FileId, out NetworkFile file))
+                    GetFile(message.FileId, (s, f) =>
                     {
-                        // TODO: expiring
-                        Logger.Info("File found, replying from cache");
-                        replyMessage = new GotFileNetworkMessage(OwnId, file);
-                    }
-                    else
-                    {
-                        Logger.Info("Local file not found, looking for it further");
-                        GetFile(message.FileId, (s, f) =>
-                        {
-                            var reply = new GotFileNetworkMessage(OwnId, f);
-                            senderConnection.Send(reply);
-                        }, message.VisitedNodes);
-                    }
-
+                        var reply = new GotFileNetworkMessage(OwnId, message.FileId, f);
+                        Logger.Info("Forwarding file {0} to requester {1}", message.FileId, message.From);
+                        contact.NetworkConnection.Send(reply);
+                    }, message.VisitedNodes);
                     break;
 
                 case GetClosestNodesNetworkMessage message:
