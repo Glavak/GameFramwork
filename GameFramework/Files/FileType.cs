@@ -4,6 +4,7 @@
     {
         PlayerData,
         Leaderboard,
+        Matchmaking,
         Custom
     }
 }

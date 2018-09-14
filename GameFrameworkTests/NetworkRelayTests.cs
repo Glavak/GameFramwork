@@ -271,5 +271,61 @@ namespace GameFrameworkTests
             Assert.AreEqual(fileId, file.Id);
             Assert.AreEqual("new value", file.Entries["field"]);
         }
+
+        [TestMethod]
+        public async Task TestGetOfflinePlayerFile()
+        {
+            await relay0.ConnectToNodeAsync(1);
+            await relay0.ConnectToNodeAsync(2);
+
+            await Task.Delay(100);
+
+            // Get file from node 0 on node 1:
+            relay1.GetFile(relay0.OwnId, (s, f) => { Console.WriteLine(); });
+
+            await Task.Delay(100);
+
+            // Disable node 0:
+            relay0.Dispose();
+
+            await Task.Delay(100);
+
+            // Get file from node 0 on node 2:
+            NetworkFile file = null;
+            relay2.GetFile(relay0.OwnId, (s, f) => file = f);
+
+            await Task.Delay(100);
+
+            Assert.AreEqual(relay0.OwnId, file.Id);
+            Assert.AreEqual(FileType.PlayerData, file.FileType);
+        }
+
+        [TestMethod]
+        public async Task TestGetMergedMatchmaking()
+        {
+            await relay0.ConnectToNodeAsync(1);
+            await relay0.ConnectToNodeAsync(2);
+
+            await Task.Delay(100);
+
+            // Get file from node 0 on node 1:
+            relay1.GetFile(relay0.OwnId, (s, f) => { Console.WriteLine(); });
+
+            await Task.Delay(100);
+
+            // Disable node 0:
+            relay0.Dispose();
+
+            await Task.Delay(100);
+
+            // Get file from node 0 on node 2:
+            NetworkFile file = null;
+            relay2.GetFile(relay0.OwnId, (s, f) => file = f);
+
+            await Task.Delay(100);
+
+            Assert.AreEqual(relay0.OwnId, file.Id);
+            Assert.AreEqual(FileType.PlayerData, file.FileType);
+        }
     }
 }

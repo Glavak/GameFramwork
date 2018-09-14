@@ -53,6 +53,7 @@
     <Compile Include="Contact.cs" />
     <Compile Include="DhtUtils.cs" />
     <Compile Include="FileSearchRequest.cs" />
+    <Compile Include="Files\FilesMerger.cs" />
     <Compile Include="Files\FileType.cs" />
     <Compile Include="Files\FileTypeExtensions.cs" />
     <Compile Include="FrameworkException.cs" />

@@ -6,6 +6,8 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using GameFramework.Files;
+using GameFramework.Logging;
 
 namespace GameFramework
 {
@@ -13,6 +15,8 @@ namespace GameFramework
         where TNetworkConnection : INetworkConnection<TNetworkAddress>
     {
         public EventHandler<byte[]> OnDirectMessage { get; set; }
+
+        public ILogger Logger = new DummyLogger();
 
         public List<Contact<TNetworkAddress>>[] KBuckets { get; set; }
         public Guid OwnId { get; }
@@ -45,6 +49,8 @@ namespace GameFramework
                 DateTime.Now, FileType.PlayerData,
                 builder.ToImmutable());
             files.Add(OwnId, ownFile);
+
+            Logger = new PrefixedLogger(new ConsoleLogger(), OwnId.ToString() + " | ");
         }
 
         public void Dispose()
@@ -91,14 +97,14 @@ namespace GameFramework
 
         public void GetFile(Guid fileId, EventHandler<NetworkFile> onFileRecieved, HashSet<Guid> nodesWithoutFile)
         {
+            Logger.Info("Trying to get file {0}", fileId);
             if (files.TryGetValue(fileId, out NetworkFile file))
             {
                 if (file.Owner != OwnId &&
                     file.RecievedFromOrigin + file.FileType.GetCacheLifetime() < DateTime.Now)
                 {
                     // Expired
-                    // TODO: if file not found, still return expired one
-                    files.Remove(fileId);
+                    Logger.Info("File expired, trying to find newer");
                 }
                 else
                 {
@@ -107,10 +113,12 @@ namespace GameFramework
                         file = file.CopyRefreshingOriginated();
                     }
 
+                    Logger.Info("File found, invoking callback");
                     onFileRecieved?.Invoke(this, file);
                     return;
                 }
             }
+            else Logger.Info("File not found, looking for contacts");
 
             if (!fileSearchRequests.TryGetValue(fileId, out FileSearchRequest searchRequest))
             {
@@ -126,9 +134,19 @@ namespace GameFramework
             if (nodesWithoutFile != null) searchRequest.NodesWithoutFile.UnionWith(nodesWithoutFile);
 
             var contact = GetClosestContactExcept(fileId);
-
-            GetFileNetworkMessage message = new GetFileNetworkMessage(OwnId, fileId, searchRequest.NodesWithoutFile);
-            contact.NetworkConnection.Send(message);
+            if (contact == null)
+            {
+                // No more contacts that can have this file, return expired one, or null
+                Logger.Info("No suitable contacts found, no such dile exists");
+                onFileRecieved?.Invoke(this, file);
+            }
+            else
+            {
+                Logger.Info("Asking {0} for file", contact.Id);
+                GetFileNetworkMessage message =
+                    new GetFileNetworkMessage(OwnId, fileId, searchRequest.NodesWithoutFile);
+                contact.NetworkConnection.Send(message);
+            }
         }
 
         public Guid CreateNewFile(Dictionary<string, string> entries)
@@ -220,12 +238,17 @@ namespace GameFramework
                     break;
 
                 case GetFileNetworkMessage message:
+                    Logger.Info("GetFileNetworkMessage for file {0} recieved", message.FileId);
+
                     if (files.TryGetValue(message.FileId, out NetworkFile file))
                     {
+                        // TODO: expiring
+                        Logger.Info("File found, replying from cache");
                         replyMessage = new GotFileNetworkMessage(OwnId, file);
                     }
                     else
                     {
+                        Logger.Info("Local file not found, looking for it further");
                         GetFile(message.FileId, (s, f) =>
                         {
                             var reply = new GotFileNetworkMessage(OwnId, f);
@@ -257,13 +280,27 @@ namespace GameFramework
                     break;
 
                 case GotFileNetworkMessage message:
-                    NetworkFile recievedFile = message.File;
+                    Logger.Info("GotFileNetworkMessage for file {0} recieved", message.FileId);
 
-                    if (fileSearchRequests.TryGetValue(recievedFile.Id, out FileSearchRequest request))
+                    NetworkFile recievedFile = message.File;
+                    bool hadStored = files.TryGetValue(message.FileId, out NetworkFile storedFile);
+
+                    NetworkFile mergedFile = FilesMerger.MergeFiles(recievedFile, storedFile);
+
+                    if (fileSearchRequests.TryGetValue(message.FileId, out FileSearchRequest request))
                     {
-                        files.Add(recievedFile.Id, recievedFile); // Cache it, in case it's needed later
-                        request.OnFound?.Invoke(this, recievedFile);
-                        fileSearchRequests.Remove(recievedFile.Id);
+                        if (!hadStored)
+                        {
+                            files.Add(message.FileId, mergedFile); // Cache it, in case it's needed later
+                        }
+                        else
+                        {
+                            files[message.FileId] = mergedFile; // Replace cache with merged version
+                        }
+
+                        Logger.Info(mergedFile != null ? "File found" : "No such file found");
+                        request.OnFound?.Invoke(this, mergedFile);
+                        fileSearchRequests.Remove(message.FileId);
 
                         contact.LastUseful = DateTime.Now;
                     }
@@ -280,7 +317,8 @@ namespace GameFramework
                 case DirectNetworkMessage message:
                     if (message.Destination == OwnId)
                     {
-                        Console.WriteLine(OwnId + " Direct recieved, handler = " + (OnDirectMessage == null ? "nul" : "nn"));
+                        Console.WriteLine(OwnId + " Direct recieved, handler = " +
+                                          (OnDirectMessage == null ? "nul" : "nn"));
                         // HACK: Fix with something normal
                         while (OnDirectMessage == null) Task.Delay(5).Wait();
                         OnDirectMessage.Invoke(message.Origin, message.Data);

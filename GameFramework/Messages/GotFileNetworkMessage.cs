@@ -7,11 +7,14 @@ namespace GameFramework
     {
         public Guid From { get; }
 
+        public Guid FileId { get; }
+
         public NetworkFile File { get; }
 
         public GotFileNetworkMessage(Guid from, NetworkFile file)
         {
             From = from;
+            FileId = file.Id;
             File = file;
         }
     }
