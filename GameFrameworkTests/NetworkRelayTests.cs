@@ -337,7 +337,7 @@ namespace GameFrameworkTests
             entries = new Dictionary<string, string> { { "field2", "value2" } };
             relay1.UpdateFile(matchmakingFileId, entries);
 
-            await Task.Delay(100);
+            await Task.Delay(5000); // Wait for cached files to invalidate
 
             // Get file on node 2, it should ask other node, and it should ask remaning node for it and merge:
             NetworkFile file = null;
