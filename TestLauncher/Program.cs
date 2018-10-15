@@ -9,8 +9,10 @@ namespace TestLauncher
 {
     internal static class Program
     {
-        private static FormGame<int> client0;
-        private static FormGame<int> client1;
+        private static FormMatchmaking<int> client0;
+        private static FormMatchmaking<int> client1;
+
+        private static readonly Guid MatchmakingFileId = DhtUtils.GenerateFileId();
 
         /// <summary>
         /// The main entry point for the application.
@@ -18,13 +20,16 @@ namespace TestLauncher
         [STAThread]
         private static void Main()
         {
+            AppDomain currentDomain = AppDomain.CurrentDomain;
+            currentDomain.UnhandledException += new UnhandledExceptionEventHandler(MyHandler);
+
             LocalNetworkConnectionHub hub = new LocalNetworkConnectionHub();
 
             LocalNetworkConnectionFactory factory0 = hub.CreateNodeFactory();
             LocalNetworkConnectionFactory factory1 = hub.CreateNodeFactory();
 
-            INetworkRelay<int> relay0 = new NetworkRelay<LocalNetworkConnection, int>(factory0);
-            INetworkRelay<int> relay1 = new NetworkRelay<LocalNetworkConnection, int>(factory1);
+            INetworkRelay<int> relay0 = new NetworkRelay<LocalNetworkConnection, int>(factory0, MatchmakingFileId);
+            INetworkRelay<int> relay1 = new NetworkRelay<LocalNetworkConnection, int>(factory1, MatchmakingFileId);
 
             relay0.ConnectToNodeAsync(1).Wait();
 
@@ -33,17 +38,23 @@ namespace TestLauncher
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            client0 = new FormGame<int>(relay0, relay1.OwnId);
-            client1 = new FormGame<int>(relay1, relay0.OwnId);
+            client0 = new FormMatchmaking<int>(relay0, MatchmakingFileId);
+            client1 = new FormMatchmaking<int>(relay1, MatchmakingFileId);
 
             Task.Delay(100).Wait();
 
             var thread = new Thread(ThreadStart);
-            // allow UI with ApartmentState.STA though [STAThread] above should give that to you
             thread.TrySetApartmentState(ApartmentState.STA);
             thread.Start();
 
             Application.Run(client0);
+        }
+
+        private static void MyHandler(object sender, UnhandledExceptionEventArgs args)
+        {
+            Exception e = (Exception)args.ExceptionObject;
+            Console.WriteLine("MyHandler caught : " + e.Message);
+            Console.WriteLine("Runtime terminating: {0}", args.IsTerminating);
         }
 
         private static void ThreadStart()

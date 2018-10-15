@@ -111,7 +111,7 @@
             this.Controls.Add(this.labelGameWith);
             this.Controls.Add(this.tableLayoutPanelGame);
             this.Name = "FormGame";
-            this.Text = "Form1";
+            this.Text = "P2P TicTacToe - Game";
             this.Load += new System.EventHandler(this.FormGame_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

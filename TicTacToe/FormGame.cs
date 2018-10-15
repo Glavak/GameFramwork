@@ -14,7 +14,7 @@ namespace TicTacToe
         private bool isPlayingX;
         private Button[,] buttons;
         private GameState state;
-        Random random = new Random();
+        private readonly Random random = new Random();
 
         public FormGame(INetworkRelay<TNetworkAddress> relay, Guid opponentGuid)
         {
@@ -31,12 +31,12 @@ namespace TicTacToe
 
         private void OnDirectMessage(object sender, byte[] bytes)
         {
+            if ((Guid)sender != opponentGuid) return;
+
             switch (state)
             {
                 case GameState.FlippingCoin:
                     int opponentPriority = BitsUtils.BytesToInt(bytes);
-                    Console.WriteLine(relay.OwnId + " ondir" + priority + " " + opponentPriority + " " +
-                                      Thread.CurrentThread.ManagedThreadId);
                     if (priority > opponentPriority)
                     {
                         state = GameState.OurTurn;
@@ -50,7 +50,7 @@ namespace TicTacToe
 
                         Invoke(new MethodInvoker(() =>
                         {
-                            labelStatus.Text = "Opponents turn, better luck next time";
+                            labelStatus.Text = "Opponent's turn, better luck next time";
                             SetFieldInteractable(false);
                         }));
                     }
@@ -115,7 +115,7 @@ namespace TicTacToe
             relay.SendDirectMessage(opponentGuid, new[] {x, y});
             buttons[x, y].Text = isPlayingX ? "X" : "O";
             state = GameState.OpponentTurn;
-            labelStatus.Text = "Opponents turn";
+            labelStatus.Text = "Opponent's turn";
             SetFieldInteractable(false);
         }
 
