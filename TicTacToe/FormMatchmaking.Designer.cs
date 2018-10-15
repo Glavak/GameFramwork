@@ -50,10 +50,12 @@
             this.columnHeaderName,
             this.columnHeaderOpponent,
             this.columnHeaderLevel});
+            this.listViewGames.FullRowSelect = true;
             this.listViewGames.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
             this.listViewGames.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
             listViewItem1});
             this.listViewGames.Location = new System.Drawing.Point(12, 38);
+            this.listViewGames.MultiSelect = false;
             this.listViewGames.Name = "listViewGames";
             this.listViewGames.Size = new System.Drawing.Size(344, 381);
             this.listViewGames.TabIndex = 0;

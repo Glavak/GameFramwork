@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using GameFramework;
 
@@ -34,6 +33,14 @@ namespace TicTacToe
                 relay.SendDirectMessage((Guid) sender, new[] {MessageConnect});
 
                 StartGame((Guid) sender);
+
+                relay.GetFile(matchmakingFileId, (s, file) =>
+                {
+                    var newEntries = file.Entries.SetItem(relay.OwnId.ToString(), "");
+                    relay.UpdateFile(matchmakingFileId, newEntries);
+
+                    OnFileRecieved(sender, file);
+                });
             }
         }
 
@@ -47,7 +54,17 @@ namespace TicTacToe
                 Hide();
 
                 formGame.Location = this.Location;
+                formGame.FormClosed += OnFormGameClosed;
             }));
+        }
+
+        private void OnFormGameClosed(object sender, FormClosedEventArgs formClosedEventArgs)
+        {
+            Show();
+            buttonRefresh.PerformClick();
+
+            buttonConnect.Enabled = true;
+            buttonCreate.Enabled = true;
         }
 
         private void OnReplyDirectMessage(object sender, byte[] bytes)
@@ -56,7 +73,7 @@ namespace TicTacToe
 
             if (bytes[0] == MessageConnect)
             {
-                StartGame((Guid)sender);
+                StartGame((Guid) sender);
             }
             else
             {

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using System.Windows.Forms;
 using GameFramework;
 
@@ -31,7 +30,7 @@ namespace TicTacToe
 
         private void OnDirectMessage(object sender, byte[] bytes)
         {
-            if ((Guid)sender != opponentGuid) return;
+            if ((Guid) sender != opponentGuid) return;
 
             switch (state)
             {

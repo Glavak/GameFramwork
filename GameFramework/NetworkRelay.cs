@@ -333,12 +333,14 @@ namespace GameFramework
                         if (OnDirectMessage == null)
                         {
                             pendingDirectMessages.Add(message);
-                            Logger.Warn("Direct message while no handler attached, storing it until handler availiable");
+                            Logger.Warn(
+                                "Direct message while no handler attached, storing it until handler availiable");
                         }
                         else
                         {
                             OnDirectMessage.Invoke(message.Origin, message.Data);
                         }
+
                         contact.LastUseful = DateTime.Now;
                     }
                     else
