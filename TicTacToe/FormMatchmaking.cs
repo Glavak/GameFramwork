@@ -65,6 +65,8 @@ namespace TicTacToe
 
             buttonConnect.Enabled = true;
             buttonCreate.Enabled = true;
+
+            relay.OnDirectMessage += OnInviteDirectMessage;
         }
 
         private void OnReplyDirectMessage(object sender, byte[] bytes)
@@ -139,8 +141,11 @@ namespace TicTacToe
 
             relay.GetFile(matchmakingFileId, (s, file) =>
             {
-                var newEntries = file.Entries.Add(relay.OwnId.ToString(), "No message");
-                relay.UpdateFile(matchmakingFileId, newEntries);
+                var id = relay.OwnId.ToString();
+                var newEntries = file.Entries.ContainsKey(id) ?
+                    file.Entries.SetItem(id, "No message") :
+                    file.Entries.Add(id, "No message");
+                file = relay.UpdateFile(matchmakingFileId, newEntries);
 
                 OnFileRecieved(sender, file);
             });

@@ -178,7 +178,7 @@ namespace GameFramework
             return file.Id;
         }
 
-        public void UpdateFile(Guid fileId, IDictionary<string, string> entries)
+        public NetworkFile UpdateFile(Guid fileId, IDictionary<string, string> entries)
         {
             if (!files.TryGetValue(fileId, out NetworkFile file))
             {
@@ -191,10 +191,14 @@ namespace GameFramework
                 throw new FrameworkException("File modification not allowed");
             }
 
-            files[file.Id] = new NetworkFile(file.Id, file.Owner,
+            var updatedFile = new NetworkFile(file.Id, file.Owner,
                 DateTime.Now, file.FileType,
                 entries.ToImmutableDictionary());
+            files[file.Id] = updatedFile;
+
             Logger.Info($"File {fileId} updated");
+
+            return updatedFile;
         }
 
         public void SendDirectMessage(Guid target, byte[] data)
