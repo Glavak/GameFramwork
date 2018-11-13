@@ -161,6 +161,17 @@ namespace TicTacToe
             {
                 SetWin(buttons[1, 1].Text);
             }
+
+            // Draw
+            for (int x = 0; x < 3; x++)
+            {
+                for (int y = 0; y < 3; y++)
+                {
+                    if (buttons[x, y].Text == "") return;
+                }
+            }
+
+            SetWin("?");
         }
 
         private void SetWin(string winner)
@@ -171,7 +182,11 @@ namespace TicTacToe
 
             Invoke(new MethodInvoker(() =>
             {
-                if (winner == "X" ^ isPlayingX)
+                if (winner == "?")
+                {
+                    labelStatus.Text = "Draw";
+                }
+                else if (winner == "X" ^ isPlayingX)
                 {
                     labelStatus.Text = "You lost :c";
 
