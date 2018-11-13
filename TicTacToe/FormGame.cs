@@ -176,14 +176,12 @@ namespace TicTacToe
                     labelStatus.Text = "You lost :c";
 
                     ModifyPlayerLevel(relay.OwnId, -1);
-                    //ModifyPlayerLevel(opponentGuid, 1);
                 }
                 else
                 {
                     labelStatus.Text = "You win, congrats!";
 
                     ModifyPlayerLevel(relay.OwnId, 1);
-                    //ModifyPlayerLevel(opponentGuid, -1);
                 }
 
                 SetFieldInteractable(false);
