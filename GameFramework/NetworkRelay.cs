@@ -111,6 +111,39 @@ namespace GameFramework
             }
         }
 
+        /// <inheritdoc />
+        public NetworkFile GetFileLocalOrNull(Guid fileId, bool returnEvenExpired = false, bool queueIfNotFound = false)
+        {
+            if (files.TryGetValue(fileId, out NetworkFile file))
+            {
+                if (file.Owner != OwnId &&
+                    file.RecievedFromOrigin + file.FileType.GetCacheLifetime() < DateTime.Now)
+                {
+                    Logger.Info("Local file {0} found expired", fileId);
+
+                    if (returnEvenExpired) return file;
+                }
+                else
+                {
+                    if (file.Owner == OwnId)
+                    {
+                        file = file.CopyRefreshingOriginated();
+                    }
+
+                    Logger.Info("Local file {0} found", fileId);
+                    return file;
+                }
+            }
+            else
+            {
+                Logger.Info("Local file {0} not found", fileId);
+            }
+
+            if (queueIfNotFound) GetFile(fileId, null);
+
+            return null;
+        }
+
         public void GetFile(Guid fileId, EventHandler<NetworkFile> onFileRecieved)
         {
             GetFile(fileId, onFileRecieved, null);
@@ -139,7 +172,10 @@ namespace GameFramework
                     return;
                 }
             }
-            else Logger.Info("File not found, looking for contacts");
+            else
+            {
+                Logger.Info("File not found, looking for contacts");
+            }
 
             if (!fileSearchRequests.TryGetValue(fileId, out FileSearchRequest searchRequest))
             {

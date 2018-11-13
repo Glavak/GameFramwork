@@ -116,7 +116,7 @@ namespace TicTacToe
 
                 if (message == "") continue;
 
-                var listViewItem = new ListViewItem(new[] {message, authorGuid, "N/A"});
+                var listViewItem = new ListViewItem(new[] {message, authorGuid, GetPlayerLevel(new Guid(authorGuid))});
                 if (authorGuid == relay.OwnId.ToString()) listViewItem.BackColor = Color.Aquamarine;
                 Invoke(new MethodInvoker(() => { listViewGames.Items.Add(listViewItem); }));
             }
@@ -126,6 +126,17 @@ namespace TicTacToe
                 listViewGames.EndUpdate();
                 labelStatus.Text = "Ready";
             }));
+        }
+
+        private string GetPlayerLevel(Guid playerId)
+        {
+            NetworkFile file = relay.GetFileLocalOrNull(playerId, false, true);
+
+            if (file == null) return "N/A";
+
+            if (!file.Entries.TryGetValue("Level", out string level)) return "N/A";
+
+            return level;
         }
 
         private void buttonConnect_Click(object sender, EventArgs e)
