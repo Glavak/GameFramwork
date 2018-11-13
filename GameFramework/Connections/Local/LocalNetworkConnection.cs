@@ -27,6 +27,9 @@ namespace GameFramework
             {
                 while (!disposed)
                 {
+                    if (OnRecieve == null)
+                        Console.WriteLine("NULL!");
+
                     if (OnRecieve != null && pendingMessages.TryDequeue(out INetworkMessage message))
                     {
                         OnRecieve.Invoke(this, message);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using GameFramework;
 
@@ -170,11 +171,37 @@ namespace TicTacToe
 
             Invoke(new MethodInvoker(() =>
             {
-                if (winner == "X" ^ isPlayingX) labelStatus.Text = "You lost :c";
-                else labelStatus.Text = "You win, congrats!";
+                if (winner == "X" ^ isPlayingX)
+                {
+                    labelStatus.Text = "You lost :c";
+
+                    ModifyPlayerLevel(relay.OwnId, -1);
+                    //ModifyPlayerLevel(opponentGuid, 1);
+                }
+                else
+                {
+                    labelStatus.Text = "You win, congrats!";
+
+                    ModifyPlayerLevel(relay.OwnId, 1);
+                    //ModifyPlayerLevel(opponentGuid, -1);
+                }
 
                 SetFieldInteractable(false);
             }));
+        }
+
+        private void ModifyPlayerLevel(Guid playerId, int levelOffset)
+        {
+            relay.GetFile(playerId, (s, file) =>
+            {
+                int level = Convert.ToInt32(file.Entries["Level"]);
+
+                if (level + levelOffset > 0) level += levelOffset;
+                else level = 1;
+
+                var newEntries = file.Entries.SetItem("Level", level.ToString());
+                relay.UpdateFile(playerId, newEntries);
+            });
         }
     }
 

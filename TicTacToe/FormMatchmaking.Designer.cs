@@ -42,10 +42,15 @@
             this.timerUpdateList = new System.Windows.Forms.Timer(this.components);
             this.buttonRefresh = new System.Windows.Forms.Button();
             this.labelStatus = new System.Windows.Forms.Label();
+            this.labelLevel = new System.Windows.Forms.Label();
+            this.textBoxLevel = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // listViewGames
             // 
+            this.listViewGames.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.listViewGames.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeaderName,
             this.columnHeaderOpponent,
@@ -54,10 +59,10 @@
             this.listViewGames.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
             this.listViewGames.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
             listViewItem1});
-            this.listViewGames.Location = new System.Drawing.Point(12, 38);
+            this.listViewGames.Location = new System.Drawing.Point(12, 64);
             this.listViewGames.MultiSelect = false;
             this.listViewGames.Name = "listViewGames";
-            this.listViewGames.Size = new System.Drawing.Size(344, 381);
+            this.listViewGames.Size = new System.Drawing.Size(344, 374);
             this.listViewGames.TabIndex = 0;
             this.listViewGames.UseCompatibleStateImageBehavior = false;
             this.listViewGames.View = System.Windows.Forms.View.Details;
@@ -99,7 +104,8 @@
             // 
             // buttonConnect
             // 
-            this.buttonConnect.Location = new System.Drawing.Point(362, 84);
+            this.buttonConnect.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonConnect.Location = new System.Drawing.Point(362, 110);
             this.buttonConnect.Name = "buttonConnect";
             this.buttonConnect.Size = new System.Drawing.Size(80, 23);
             this.buttonConnect.TabIndex = 7;
@@ -109,7 +115,8 @@
             // 
             // buttonCreate
             // 
-            this.buttonCreate.Location = new System.Drawing.Point(362, 113);
+            this.buttonCreate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonCreate.Location = new System.Drawing.Point(362, 139);
             this.buttonCreate.Name = "buttonCreate";
             this.buttonCreate.Size = new System.Drawing.Size(80, 23);
             this.buttonCreate.TabIndex = 8;
@@ -125,7 +132,8 @@
             // 
             // buttonRefresh
             // 
-            this.buttonRefresh.Location = new System.Drawing.Point(362, 38);
+            this.buttonRefresh.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonRefresh.Location = new System.Drawing.Point(362, 64);
             this.buttonRefresh.Name = "buttonRefresh";
             this.buttonRefresh.Size = new System.Drawing.Size(80, 23);
             this.buttonRefresh.TabIndex = 9;
@@ -135,19 +143,42 @@
             // 
             // labelStatus
             // 
+            this.labelStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.labelStatus.AutoSize = true;
-            this.labelStatus.Location = new System.Drawing.Point(375, 406);
+            this.labelStatus.Location = new System.Drawing.Point(375, 425);
             this.labelStatus.Name = "labelStatus";
             this.labelStatus.Size = new System.Drawing.Size(67, 13);
             this.labelStatus.TabIndex = 10;
             this.labelStatus.Text = "Connecitng..";
             this.labelStatus.TextAlign = System.Drawing.ContentAlignment.BottomRight;
             // 
+            // labelLevel
+            // 
+            this.labelLevel.AutoSize = true;
+            this.labelLevel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelLevel.ForeColor = System.Drawing.Color.DarkKhaki;
+            this.labelLevel.Location = new System.Drawing.Point(323, 39);
+            this.labelLevel.Name = "labelLevel";
+            this.labelLevel.Size = new System.Drawing.Size(75, 17);
+            this.labelLevel.TabIndex = 11;
+            this.labelLevel.Text = "Your level:";
+            // 
+            // textBoxLevel
+            // 
+            this.textBoxLevel.Location = new System.Drawing.Point(404, 38);
+            this.textBoxLevel.Name = "textBoxLevel";
+            this.textBoxLevel.ReadOnly = true;
+            this.textBoxLevel.Size = new System.Drawing.Size(38, 20);
+            this.textBoxLevel.TabIndex = 12;
+            this.textBoxLevel.Text = "1";
+            // 
             // FormMatchmaking
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(454, 431);
+            this.ClientSize = new System.Drawing.Size(454, 450);
+            this.Controls.Add(this.textBoxLevel);
+            this.Controls.Add(this.labelLevel);
             this.Controls.Add(this.labelStatus);
             this.Controls.Add(this.buttonRefresh);
             this.Controls.Add(this.buttonCreate);
@@ -175,5 +206,7 @@
         private System.Windows.Forms.Timer timerUpdateList;
         private System.Windows.Forms.Button buttonRefresh;
         private System.Windows.Forms.Label labelStatus;
+        private System.Windows.Forms.Label labelLevel;
+        private System.Windows.Forms.TextBox textBoxLevel;
     }
 }

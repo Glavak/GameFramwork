@@ -23,6 +23,12 @@ namespace TicTacToe
             InitializeComponent();
 
             textBoxYourId.Text = relay.OwnId.ToString();
+
+            relay.GetFile(relay.OwnId, (s, file) =>
+            {
+                var newEntries = file.Entries.Add("Level", "1");
+                relay.UpdateFile(relay.OwnId, newEntries);
+            });
         }
 
         private void OnInviteDirectMessage(object sender, byte[] bytes)
@@ -67,6 +73,12 @@ namespace TicTacToe
             buttonCreate.Enabled = true;
 
             relay.OnDirectMessage += OnInviteDirectMessage;
+
+            relay.GetFile(relay.OwnId, (s, file) =>
+            {
+                var level = file.Entries["Level"];
+                Invoke(new MethodInvoker(() => textBoxLevel.Text = level));
+            });
         }
 
         private void OnReplyDirectMessage(object sender, byte[] bytes)
@@ -142,9 +154,9 @@ namespace TicTacToe
             relay.GetFile(matchmakingFileId, (s, file) =>
             {
                 var id = relay.OwnId.ToString();
-                var newEntries = file.Entries.ContainsKey(id) ?
-                    file.Entries.SetItem(id, "No message") :
-                    file.Entries.Add(id, "No message");
+                var newEntries = file.Entries.ContainsKey(id)
+                    ? file.Entries.SetItem(id, "No message")
+                    : file.Entries.Add(id, "No message");
                 file = relay.UpdateFile(matchmakingFileId, newEntries);
 
                 OnFileRecieved(sender, file);

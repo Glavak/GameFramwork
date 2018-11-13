@@ -185,11 +185,11 @@ namespace GameFramework
                 throw new FrameworkException("No such file exists");
             }
 
-            if (file.Owner != Guid.Empty &&
+            /*if (file.Owner != Guid.Empty &&
                 file.Owner != OwnId)
             {
                 throw new FrameworkException("File modification not allowed");
-            }
+            }*/
 
             var updatedFile = new NetworkFile(file.Id, file.Owner,
                 DateTime.Now, file.FileType,
@@ -237,6 +237,8 @@ namespace GameFramework
 
         private void OnMessageRecieved(object sender, INetworkMessage e)
         {
+            Logger.Info("message recieved");
+
             TNetworkConnection senderConnection = (TNetworkConnection) sender;
 
             INetworkMessage replyMessage = null;
