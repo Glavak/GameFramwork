@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Linq;
 
 namespace GameFramework.Files
@@ -47,6 +49,29 @@ namespace GameFramework.Files
             return new NetworkFile(highPriority.Id, highPriority.Owner,
                 highPriority.RecievedFromOrigin, highPriority.FileType,
                 entries);
+        }
+
+        private static NetworkFile MergeLeaderboardsFiles(NetworkFile highPriority, NetworkFile lowPriority)
+        {
+            var result = new Dictionary<string, string>(highPriority.Entries);
+
+            foreach (var entry in lowPriority.Entries)
+            {
+                if (result.ContainsKey(entry.Key))
+                {
+                    double oldVal = Convert.ToDouble(result[entry.Key]);
+                    double newVal = Convert.ToDouble(entry.Value);
+                    result[entry.Key] = Math.Max(oldVal, newVal).ToString(CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    result.Add(entry.Key, entry.Value);
+                }
+            }
+
+            return new NetworkFile(highPriority.Id, highPriority.Owner,
+                highPriority.RecievedFromOrigin, highPriority.FileType,
+                result.ToImmutableDictionary());
         }
 
         public static NetworkFile NewerFile(NetworkFile a, NetworkFile b)
