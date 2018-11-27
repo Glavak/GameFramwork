@@ -22,9 +22,7 @@ namespace GameFramework.Files
                 case FileType.Custom:
                     return NewerFile(a, b);
                 case FileType.Leaderboard:
-                    return NewerFile(a, b);
-                    // TODO: merging files
-                    break;
+                    return MergeLeaderboardsFiles(a, b);
                 case FileType.Matchmaking:
                     if (a.RecievedFromOrigin > b.RecievedFromOrigin)
                     {
@@ -59,8 +57,8 @@ namespace GameFramework.Files
             {
                 if (result.ContainsKey(entry.Key))
                 {
-                    double oldVal = Convert.ToDouble(result[entry.Key]);
-                    double newVal = Convert.ToDouble(entry.Value);
+                    double oldVal = Convert.ToDouble(result[entry.Key], CultureInfo.InvariantCulture);
+                    double newVal = Convert.ToDouble(entry.Value, CultureInfo.InvariantCulture);
                     result[entry.Key] = Math.Max(oldVal, newVal).ToString(CultureInfo.InvariantCulture);
                 }
                 else

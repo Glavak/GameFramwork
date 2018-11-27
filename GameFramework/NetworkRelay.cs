@@ -46,8 +46,7 @@ namespace GameFramework
         private readonly Dictionary<Guid, FileSearchRequest> fileSearchRequests =
             new Dictionary<Guid, FileSearchRequest>();
 
-        public NetworkRelay(INetworkConnectionFactory<TNetworkConnection, TNetworkAddress> connectionFactory,
-            Guid matchmakingFileId)
+        public NetworkRelay(INetworkConnectionFactory<TNetworkConnection, TNetworkAddress> connectionFactory)
         {
             KBuckets = new List<Contact<TNetworkAddress>>[128];
             for (int i = 0; i < KBuckets.Length; i++)
@@ -68,10 +67,6 @@ namespace GameFramework
             files.Add(OwnId, ownFile);
 
             Logger = new PrefixedLogger(new ConsoleLogger(), OwnId + " | ");
-
-            files.Add(matchmakingFileId,
-                new NetworkFile(matchmakingFileId, Guid.Empty, DateTime.MinValue, FileType.Matchmaking,
-                    ImmutableDictionary<string, string>.Empty));
         }
 
         public void Dispose()
@@ -212,6 +207,20 @@ namespace GameFramework
             var file = new NetworkFile(DhtUtils.GenerateFileId(), OwnId, entries.ToImmutableDictionary());
             files.Add(file.Id, file);
             return file.Id;
+        }
+
+        public void CreateMatchmakingFile(Guid fileId)
+        {
+            files.Add(fileId,
+                new NetworkFile(fileId, Guid.Empty, DateTime.MinValue, FileType.Matchmaking,
+                    ImmutableDictionary<string, string>.Empty));
+        }
+
+        public void CreateLeaderboardsFile(Guid fileId)
+        {
+            files.Add(fileId,
+                new NetworkFile(fileId, Guid.Empty, DateTime.MinValue, FileType.Leaderboard,
+                    ImmutableDictionary<string, string>.Empty));
         }
 
         public NetworkFile UpdateFile(Guid fileId, IDictionary<string, string> entries)

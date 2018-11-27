@@ -9,11 +9,11 @@ namespace GameFramework
             switch (fileType)
             {
                 case FileType.PlayerData:
-                    return TimeSpan.FromSeconds(10);
+                    return TimeSpan.FromSeconds(5);
                 case FileType.Leaderboard:
-                    return TimeSpan.FromMinutes(1);
+                    return TimeSpan.FromSeconds(5);
                 case FileType.Custom:
-                    return TimeSpan.Zero;
+                    return TimeSpan.FromSeconds(1);
                 case FileType.Matchmaking:
                     return TimeSpan.FromSeconds(5);
                 default:

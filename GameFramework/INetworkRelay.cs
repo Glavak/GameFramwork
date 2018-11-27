@@ -25,6 +25,10 @@ namespace GameFramework
 
         Guid CreateNewFile(Dictionary<string, string> entries);
 
+        void CreateMatchmakingFile(Guid fileId);
+
+        void CreateLeaderboardsFile(Guid fileId);
+        
         NetworkFile UpdateFile(Guid fileId, IDictionary<string, string> entries);
 
         void SendDirectMessage(Guid target, byte[] data);

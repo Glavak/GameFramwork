@@ -44,6 +44,7 @@
             this.labelStatus = new System.Windows.Forms.Label();
             this.labelLevel = new System.Windows.Forms.Label();
             this.textBoxLevel = new System.Windows.Forms.TextBox();
+            this.buttonLeaders = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // listViewGames
@@ -172,11 +173,23 @@
             this.textBoxLevel.TabIndex = 12;
             this.textBoxLevel.Text = "1";
             // 
+            // buttonLeaders
+            // 
+            this.buttonLeaders.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonLeaders.Location = new System.Drawing.Point(362, 187);
+            this.buttonLeaders.Name = "buttonLeaders";
+            this.buttonLeaders.Size = new System.Drawing.Size(80, 23);
+            this.buttonLeaders.TabIndex = 13;
+            this.buttonLeaders.Text = "Leaders";
+            this.buttonLeaders.UseVisualStyleBackColor = true;
+            this.buttonLeaders.Click += new System.EventHandler(this.buttonLeaders_Click);
+            // 
             // FormMatchmaking
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(454, 450);
+            this.Controls.Add(this.buttonLeaders);
             this.Controls.Add(this.textBoxLevel);
             this.Controls.Add(this.labelLevel);
             this.Controls.Add(this.labelStatus);
@@ -208,5 +221,6 @@
         private System.Windows.Forms.Label labelStatus;
         private System.Windows.Forms.Label labelLevel;
         private System.Windows.Forms.TextBox textBoxLevel;
+        private System.Windows.Forms.Button buttonLeaders;
     }
 }

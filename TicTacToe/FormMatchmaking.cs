@@ -9,14 +9,16 @@ namespace TicTacToe
     {
         private readonly INetworkRelay<TNetworkAddress> relay;
         private readonly Guid matchmakingFileId;
+        private readonly Guid leaderboardsFileId;
 
         private const byte MessageConnect = 0;
         private const byte MessageReject = 1;
 
-        public FormMatchmaking(INetworkRelay<TNetworkAddress> relay, Guid matchmakingFileId)
+        public FormMatchmaking(INetworkRelay<TNetworkAddress> relay, Guid matchmakingFileId, Guid leaderboardsFileId)
         {
             this.relay = relay;
             this.matchmakingFileId = matchmakingFileId;
+            this.leaderboardsFileId = leaderboardsFileId;
 
             relay.OnDirectMessage += OnInviteDirectMessage;
 
@@ -54,7 +56,7 @@ namespace TicTacToe
         {
             Invoke(new MethodInvoker(() =>
             {
-                var formGame = new FormGame<TNetworkAddress>(relay, opponent);
+                var formGame = new FormGame<TNetworkAddress>(relay, opponent, leaderboardsFileId);
 
                 formGame.Show();
                 Hide();
@@ -183,6 +185,12 @@ namespace TicTacToe
         {
             labelStatus.Text = "Refreshing..";
             relay.GetFile(matchmakingFileId, OnFileRecieved);
+        }
+
+        private void buttonLeaders_Click(object sender, EventArgs e)
+        {
+            FormLeaderboards<TNetworkAddress> l = new FormLeaderboards<TNetworkAddress>(relay, leaderboardsFileId);
+            l.Show();
         }
     }
 }

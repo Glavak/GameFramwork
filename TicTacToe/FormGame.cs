@@ -9,6 +9,7 @@ namespace TicTacToe
     {
         private readonly INetworkRelay<TNetworkAddress> relay;
         private readonly Guid opponentGuid;
+        private readonly Guid leaderboardsFileId;
 
         private readonly int priority;
         private bool isPlayingX;
@@ -16,10 +17,12 @@ namespace TicTacToe
         private GameState state;
         private readonly Random random = new Random();
 
-        public FormGame(INetworkRelay<TNetworkAddress> relay, Guid opponentGuid)
+        public FormGame(INetworkRelay<TNetworkAddress> relay, Guid opponentGuid, Guid leaderboardsFileId)
         {
             this.relay = relay;
             this.opponentGuid = opponentGuid;
+            this.leaderboardsFileId = leaderboardsFileId;
+
             InitializeComponent();
 
             textBoxYourId.Text = relay.OwnId.ToString();
@@ -214,7 +217,14 @@ namespace TicTacToe
 
                 var newEntries = file.Entries.SetItem("Level", level.ToString());
                 relay.UpdateFile(playerId, newEntries);
+
+                relay.GetFile(leaderboardsFileId, (s1, file1) =>
+                {
+                    newEntries = file1.Entries.SetItem(playerId.ToString(), level.ToString());
+                    relay.UpdateFile(leaderboardsFileId, newEntries);
+                });
             });
+
         }
     }
 
