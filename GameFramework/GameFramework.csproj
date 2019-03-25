@@ -74,6 +74,8 @@
     <Compile Include="Messages\NodeListNetworkMessage.cs" />
     <Compile Include="Files\NetworkFile.cs" />
     <Compile Include="NetworkRelay.cs" />
+    <Compile Include="Persistance\IRelaySaverLoader.cs" />
+    <Compile Include="Persistance\RelaySaverLoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Connections\Tcp\TcpNetworkConnection.cs" />
     <Compile Include="Connections\Tcp\TcpNetworkConnectionFactory.cs" />

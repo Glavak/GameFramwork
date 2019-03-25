@@ -1,12 +1,12 @@
-﻿using System;
+﻿using GameFramework.Files;
+using GameFramework.Logging;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
-using GameFramework.Files;
-using GameFramework.Logging;
 
 namespace GameFramework
 {
@@ -28,6 +28,8 @@ namespace GameFramework
                 }
             }
         }
+
+        public IRelaySaverLoader<TNetworkAddress> saverLoader;
 
         private EventHandler<byte[]> onDirectMessage;
         private readonly HashSet<DirectNetworkMessage> pendingDirectMessages = new HashSet<DirectNetworkMessage>();
@@ -67,6 +69,22 @@ namespace GameFramework
             files.Add(OwnId, ownFile);
 
             Logger = new PrefixedLogger(new ConsoleLogger(), OwnId + " | ");
+
+            if (saverLoader != null)
+            {
+                if (saverLoader.Load(out IEnumerable<TNetworkAddress> addresses, out IEnumerable<NetworkFile> files))
+                {
+                    foreach (var address in addresses)
+                    {
+                        ConnectToNodeAsync(address).Wait();
+                    }
+
+                    foreach (var file in files)
+                    {
+                        this.files.Add(file.Id, file);
+                    }
+                }
+            }
         }
 
         public void Dispose()
@@ -81,6 +99,12 @@ namespace GameFramework
             if (disposing)
             {
                 connectionFactory.Dispose();
+
+                if (saverLoader != null)
+                {
+                    var addresses = KBuckets.SelectMany<List<Contact<TNetworkAddress>>, TNetworkAddress>(buck => buck.Select(c => c.NetworkConnection.Address);
+                    saverLoader.Save(addresses, files.Values);
+                }
             }
 
             disposed = true;
@@ -269,7 +293,7 @@ namespace GameFramework
 
         private void OnConnectionDropped(object sender, EventArgs eventArgs)
         {
-            TNetworkConnection senderConnection = (TNetworkConnection) sender;
+            TNetworkConnection senderConnection = (TNetworkConnection)sender;
 
             foreach (var kBucket in KBuckets)
             {
@@ -284,7 +308,7 @@ namespace GameFramework
         {
             Logger.Info("message recieved");
 
-            TNetworkConnection senderConnection = (TNetworkConnection) sender;
+            TNetworkConnection senderConnection = (TNetworkConnection)sender;
 
             INetworkMessage replyMessage = null;
             Dictionary<Guid, TNetworkAddress> closestContacts;
